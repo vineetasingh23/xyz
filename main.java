@@ -33,7 +33,7 @@ public class UploadService {
         Supplier<Stream<Row>> rowStreamSupplier = uploadUtil.getRowStreamSupplier(sheet);
         Row headerRow = rowStreamSupplier.get().findFirst().get();
         List<String> headerCells = uploadUtil.getStream(headerRow)
-                .map(Cell::getStringCellValue) // Read header cells as strings
+                .map(Cell::getStringCellValue)
                 .collect(Collectors.toList());
 
         List<Map<String, String>> result = new ArrayList<>();
@@ -43,11 +43,19 @@ public class UploadService {
             List<String> cellList = uploadUtil.getStream(row)
                     .map(cell -> {
                         if (cell.getCellType() == CellType.NUMERIC) {
-                            // Handle numeric value
-                            return String.valueOf(cell.getNumericCellValue());
-                        } else {
-                            // Handle other data types as strings
+                            if (DateUtil.isCellDateFormatted(cell)) {
+                                // Handle date values
+                                return cell.getLocalDateTime().toString();
+                            } else {
+                                // Handle numeric values
+                                return String.valueOf(cell.getNumericCellValue());
+                            }
+                        } else if (cell.getCellType() == CellType.STRING) {
+                            // Handle string values
                             return cell.getStringCellValue();
+                        } else {
+                            // Handle other data types as needed (e.g., boolean, error)
+                            return ""; // You can choose to skip or handle differently
                         }
                     })
                     .collect(Collectors.toList());
