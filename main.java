@@ -40,32 +40,38 @@ public class UploadService {
         int colCount = headerCells.size();
 
         rowStreamSupplier.get().skip(1).forEach(row -> {
-            List<String> cellList = uploadUtil.getStream(row)
-                    .map(cell -> {
-                        if (cell.getCellType() == CellType.NUMERIC) {
-                            if (DateUtil.isCellDateFormatted(cell)) {
-                                // Handle date values
-                                return cell.getLocalDateTime().toString();
-                            } else {
-                                // Handle numeric values
-                                return String.valueOf(cell.getNumericCellValue());
-                            }
-                        } else if (cell.getCellType() == CellType.STRING) {
-                            // Handle string values
-                            return cell.getStringCellValue();
-                        } else {
-                            // Handle other data types as needed (e.g., boolean, error)
-                            return ""; // You can choose to skip or handle differently
-                        }
-                    })
-                    .collect(Collectors.toList());
+            List<String> cellList = new ArrayList<>();
 
-            if (cellList.size() == colCount) {
-                Map<String, String> rowMap = uploadUtil.cellIteratorSupplier(colCount)
-                        .get()
-                        .collect(Collectors.toMap(headerCells::get, cellList::get));
-                result.add(rowMap);
+            for (int colIdx = 0; colIdx < colCount; colIdx++) {
+                Cell cell = row.getCell(colIdx);
+                if (cell == null) {
+                    cellList.add(""); // Treat null cells as empty strings
+                } else {
+                    if (cell.getCellType() == CellType.NUMERIC) {
+                        if (DateUtil.isCellDateFormatted(cell)) {
+                            // Handle date values
+                            cellList.add(cell.getLocalDateTime().toString());
+                        } else {
+                            // Handle numeric values
+                            cellList.add(String.valueOf(cell.getNumericCellValue()));
+                        }
+                    } else if (cell.getCellType() == CellType.STRING) {
+                        // Handle string values
+                        cellList.add(cell.getStringCellValue());
+                    } else if (cell.getCellType() == CellType.BLANK) {
+                        // Treat empty cells as empty strings
+                        cellList.add("");
+                    } else {
+                        // Handle other data types as needed (e.g., boolean, error)
+                        cellList.add(""); // You can choose to skip or handle differently
+                    }
+                }
             }
+
+            Map<String, String> rowMap = uploadUtil.cellIteratorSupplier(colCount)
+                    .get()
+                    .collect(Collectors.toMap(headerCells::get, cellList::get));
+            result.add(rowMap);
         });
 
         return result;
