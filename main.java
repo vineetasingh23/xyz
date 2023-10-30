@@ -1,19 +1,15 @@
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import java.util.Date;
+public class SqlQueryBuilder {
 
-public class DataExtractorDao {
-
-    private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final SqlQueryBuilder sqlQueryBuilder;
-
-    public DataExtractorDao(NamedParameterJdbcTemplate jdbcTemplate, SqlQueryBuilder sqlQueryBuilder) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.sqlQueryBuilder = sqlQueryBuilder;
+    public String buildUpdateObjectPropertiesQuery() {
+        return "UPDATE t_objectproperties SET value = :startTime " +
+                "WHERE property = 'lastUpdated' " +
+                "AND object_id = (SELECT object_id FROM t_object WHERE ea_guid = :parentGUID)";
     }
+}
 
-    public void updateElements(Date startTime, String parentGUID) {
-        String sql = sqlQueryBuilder.buildUpdateElementsQuery();
+
+ public void updateObjectProperties(String startTime, String parentGUID) {
+        String sql = sqlQueryBuilder.buildUpdateObjectPropertiesQuery();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("startTime", startTime)
@@ -21,4 +17,3 @@ public class DataExtractorDao {
 
         jdbcTemplate.update(sql, params);
     }
-}
