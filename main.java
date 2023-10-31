@@ -83,3 +83,10 @@ public class ElementDAO {
         }
     }
 }
+
+
+
+String originalNotes = row.getCell(7).getStringCellValue(); // Replace with your data source
+String updatedNotes = originalNotes.replace("'", " ").replace("\"", " ");
+myElement.setNotes(updatedNotes);
+
