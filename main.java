@@ -39,3 +39,16 @@ public class ExcelDataService {
         return ""; // or null as needed
     }
 }
+
+
+  try {
+                if ("Yes".equals(element.getDelete()) && element.getGuid() != null && !element.getGuid().isEmpty()) {
+                    deleteElement(element);
+                }
+
+                setParentElement(element);
+
+                addOrUpdateElement(element);
+            } catch (Exception e) {
+                // Handle exceptions
+            }
