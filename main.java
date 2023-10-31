@@ -1,37 +1,41 @@
-import org.apache.poi.ss.usermodel.*;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
 public class ExcelDataService {
 
-    public List<MyElement> readExcelData(MultipartFile file) throws IOException {
-        List<MyElement> elements = new ArrayList<>();
+    public MyElement createMyElement(Row row) {
+        MyElement myElement = new MyElement();
 
-        Workbook workbook = WorkbookFactory.create(file.getInputStream());
-        Sheet sheet = workbook.getSheetAt(0); // Assuming data is in the first sheet
+        myElement.setGuid(getStringValue(row.getCell(0)));
+        myElement.setCsvKey(getStringValue(row.getCell(1)));
+        myElement.setCsvParentKey(getStringValue(row.getCell(2)));
 
-        int rows = sheet.getPhysicalNumberOfRows();
-
-        for (int i = 0; i < rows; i++) {
-            Row row = sheet.getRow(i);
-            if (row != null) {
-                MyElement myElement = new MyElement();
-
-                myElement.setGuid(row.getCell(0).getStringCellValue());
-                myElement.setCsvKey(row.getCell(1).getStringCellValue());
-                myElement.setCsvParentKey(row.getCell(2).getStringCellValue());
-                // Populate other properties...
-
-                elements.add(myElement);
-            }
+        // Skipping rows where CSV_PARENT_KEY is empty
+        if (myElement.getCsvParentKey().length() < 2) {
+            return null; // Skipping to next iteration
         }
 
-        workbook.close();
-        return elements;
+        myElement.setDelete(getStringValue(row.getCell(3)));
+        myElement.setAlias(getStringValue(row.getCell(4)).replace("*", ""));
+        myElement.setName(getStringValue(row.getCell(5)).replace("''", "**"));
+        myElement.setNotes(getStringValue(row.getCell(6)).replaceAll("''''''", "\""));
+
+        // Assuming the rest of the attributes are strings
+        myElement.setElementType(getStringValue(row.getCell(7)));
+        myElement.setStereotype(getStringValue(row.getCell(8)));
+        myElement.setAuthor("Administrator");
+        myElement.setStatus(getStringValue(row.getCell(10)));
+        myElement.setVersion(getStringValue(row.getCell(11)));
+        myElement.setPhase(getStringValue(row.getCell(12)));
+        myElement.setUrl(getStringValue(row.getCell(13)));
+
+        return myElement;
+    }
+
+    // Helper method to safely retrieve cell values as strings
+    private String getStringValue(Cell cell) {
+        if (cell != null) {
+            cell.setCellType(CellType.STRING);
+            return cell.getStringCellValue();
+        }
+        return ""; // or null as needed
     }
 }
