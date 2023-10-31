@@ -52,3 +52,34 @@ public class EAService {
         // Logic to set a default parent package based on the user input
     }
 }
+
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class ElementDAO {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public ElementDAO(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public Element getElementByGUID(String elementGUID) {
+        String sql = "SELECT * FROM elements WHERE element_guid = ?";
+        return jdbcTemplate.queryForObject(sql, new Object[]{elementGUID}, new ElementMapper());
+    }
+
+    // ElementMapper is a RowMapper class to map query results to Element object
+    private static class ElementMapper implements RowMapper<Element> {
+        @Override
+        public Element mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Element element = new Element();
+            element.setId(rs.getLong("id"));
+            element.setElementGUID(rs.getString("element_guid"));
+            // Set other properties accordingly
+            return element;
+        }
+    }
+}
