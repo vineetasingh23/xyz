@@ -90,3 +90,10 @@ String originalNotes = row.getCell(7).getStringCellValue(); // Replace with your
 String updatedNotes = originalNotes.replace("'", " ").replace("\"", " ");
 myElement.setNotes(updatedNotes);
 
+
+public void updateObjectProperties(String parentGUID, String starttime) {
+        String sql = "UPDATE t_objectproperties SET value = ? WHERE property = 'lastUpdated' " +
+                "AND object_id = (SELECT object_id FROM t_object WHERE ea_guid = ?)";
+        
+        jdbcTemplate.update(sql, starttime, parentGUID);
+
