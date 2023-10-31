@@ -1,54 +1,54 @@
 @Service
-public class ExcelDataService {
+public class EAService {
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-    public MyElement createMyElement(Row row) {
-        MyElement myElement = new MyElement();
+    public void setParentElement(List<MyElement> elements, String defaultParentPackage) {
+        for (MyElement element : elements) {
+            String parentKey = element.getCsvParentKey();
 
-        myElement.setGuid(getStringValue(row.getCell(0)));
-        myElement.setCsvKey(getStringValue(row.getCell(1)));
-        myElement.setCsvParentKey(getStringValue(row.getCell(2)));
-
-        // Skipping rows where CSV_PARENT_KEY is empty
-        if (myElement.getCsvParentKey().length() < 2) {
-            return null; // Skipping to next iteration
+            if (parentKey != null && !parentKey.isEmpty()) {
+                if (parentKey.startsWith("{")) {
+                    try {
+                        MyElement parentElement = getElementByGUID(parentKey);
+                        
+                        if (parentElement != null && "Package".equals(parentElement.getType())) {
+                            setParentPackage(parentElement);
+                            element.setParentElementId(parentElement.getElementID());
+                        }
+                    } catch (Exception e) {
+                        // Handle errors when getting the element by GUID
+                    }
+                } else {
+                    MyElement csvParent = getCsvParentByKey(parentKey);
+                    if (csvParent == null) {
+                        setDefaultParentPackage(defaultParentPackage);
+                    } else {
+                        if ("Package".equals(csvParent.getType())) {
+                            element.setParentElementId(csvParent.getElementID());
+                            setParentPackage(csvParent);
+                        }
+                    }
+                }
+            }
         }
-
-        myElement.setDelete(getStringValue(row.getCell(3)));
-        myElement.setAlias(getStringValue(row.getCell(4)).replace("*", ""));
-        myElement.setName(getStringValue(row.getCell(5)).replace("''", "**"));
-        myElement.setNotes(getStringValue(row.getCell(6)).replaceAll("''''''", "\""));
-
-        // Assuming the rest of the attributes are strings
-        myElement.setElementType(getStringValue(row.getCell(7)));
-        myElement.setStereotype(getStringValue(row.getCell(8)));
-        myElement.setAuthor("Administrator");
-        myElement.setStatus(getStringValue(row.getCell(10)));
-        myElement.setVersion(getStringValue(row.getCell(11)));
-        myElement.setPhase(getStringValue(row.getCell(12)));
-        myElement.setUrl(getStringValue(row.getCell(13)));
-
-        return myElement;
     }
 
-    // Helper method to safely retrieve cell values as strings
-    private String getStringValue(Cell cell) {
-        if (cell != null) {
-            cell.setCellType(CellType.STRING);
-            return cell.getStringCellValue();
-        }
-        return ""; // or null as needed
+    private MyElement getElementByGUID(String guid) {
+        // Your logic to fetch an element from the database by GUID
+        return null;
+    }
+
+    private MyElement getCsvParentByKey(String key) {
+        // Your logic to fetch the CSV parent element by key
+        return null;
+    }
+
+    private void setParentPackage(MyElement parentPackage) {
+        // Logic to handle setting the parent package
+    }
+
+    private void setDefaultParentPackage(String defaultParentPackage) {
+        // Logic to set a default parent package based on the user input
     }
 }
-
-
-  try {
-                if ("Yes".equals(element.getDelete()) && element.getGuid() != null && !element.getGuid().isEmpty()) {
-                    deleteElement(element);
-                }
-
-                setParentElement(element);
-
-                addOrUpdateElement(element);
-            } catch (Exception e) {
-                // Handle exceptions
-            }
