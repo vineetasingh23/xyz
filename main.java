@@ -97,3 +97,9 @@ public void updateObjectProperties(String parentGUID, String starttime) {
         
         jdbcTemplate.update(sql, starttime, parentGUID);
 
+
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"); // Adjust the format as needed
+LocalDateTime now = LocalDateTime.now();
+String startTime = now.format(formatter);
+
+
