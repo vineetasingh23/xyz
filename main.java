@@ -103,3 +103,31 @@ LocalDateTime now = LocalDateTime.now();
 String startTime = now.format(formatter);
 
 
+
+
+    @Service
+public class DataExtractorDao {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    public Elements getElementsForPackage(String packageID) {
+        String sql = "SELECT * FROM t_object WHERE package_id = ?";
+        
+        return jdbcTemplate.queryForObject(sql, new Object[]{packageID}, new ElementsRowMapper());
+    }
+}
+
+class ElementsRowMapper implements RowMapper<Elements> {
+    @Override
+    public Elements mapRow(ResultSet rs, int rowNum) throws SQLException {
+        Elements elements = new Elements();
+        elements.setId(rs.getInt("id"));
+        elements.setName(rs.getString("name"));
+        // Map other fields
+        
+        return elements;
+    }
+}
+
+
