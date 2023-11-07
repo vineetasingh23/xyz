@@ -1,29 +1,10 @@
-@Service
-public class ElementService {
-    @Autowired
-    private ElementRepository elementRepository;
-
-    public Element getElementDetails(String objectID) {
-        Map<String, Object> result = elementRepository.getElements(objectID);
-        Element element = new Element();
-
-        // Mapping the retrieved values to the Element object
-        element.setObjectId((Integer) result.get("objectId"));
-        element.setName((String) result.get("elementName"));
-        element.setElementType((String) result.get("elementType"));
-        element.setGuid((String) result.get("guid"));
-        element.setAuthor((String) result.get("author"));
-        // ... map other attributes similarly
-
-        return element;
-    }
+try {
+    String objectID = jdbcTemplate.queryForObject(query, new RowMapper<String>() {
+        public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return rs.getString("column_name");
+        }
+    });
+} catch (EmptyResultDataAccessException e) {
+    // Handle the case when no results are found
+    // For example, set objectID to a default value or throw an exception
 }
-
-
-
-
-
-
-
-
-
