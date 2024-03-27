@@ -62,3 +62,43 @@ const App = () => {
 };
 
 export default App;
+
+import React from 'react';
+
+const ThemeColors = ({ xtheme }) => {
+  const themeColors = {
+    light: {
+      backgroundColor: '#FFFFFF',
+      primaryColor: '#B7D8FF',
+      fontColor: '#000000',
+      headerAndSidebarColor: '#0C2340',
+      headerAndSidebarFontColor: '#FFFFFF',
+      headerHoverColor: '#B7D8FF',
+      sideBarHoverColor: '#479EF526',
+      sideBarClickColor: '#B7D8FFCC',
+      existingQueuesBackgroundColor: 'rgba(185, 185, 185, 0.13)',
+      existingQueuesFontColor: '#000000',
+      iconColorExistingQueues: '#808080',
+    },
+    dark: {
+      backgroundColor: '#353333',
+      primaryColor: '#479EF5',
+      fontColor: '#FFFFFF',
+      headerAndSidebarColor: '#111010',
+      headerAndSidebarFontColor: '#FFFFFF',
+      headerHoverColor: '#479EF5',
+      sideBarHoverColor: '#2C2929',
+      sideBarClickColor: '#479EF580',
+      existingQueuesBackgroundColor: 'rgba(185, 185, 185, 0.13)',
+      existingQueuesFontColor: '#FFFFFF',
+      iconColorExistingQueues: '#F0F0F0',
+    },
+  };
+
+  const currentThemeColors = themeColors[xtheme];
+
+  return currentThemeColors;
+};
+
+export default ThemeColors;
+
