@@ -102,3 +102,65 @@ const ThemeColors = ({ xtheme }) => {
 
 export default ThemeColors;
 
+
+
+
+import React, { createContext, useState } from 'react';
+
+// Create the context
+export const ThemeContext = createContext();
+
+// Create a provider component to wrap your app with
+export const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState('light');
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+
+
+
+        import React from 'react';
+import Header from './header'; // Assuming your header component is in the same directory
+import { ThemeProvider } from './ThemeContext';
+
+const App = () => {
+  return (
+    <ThemeProvider>
+      <Header />
+      {/* Other components in your app */}
+    </ThemeProvider>
+  );
+};
+
+export default App;
+
+
+
+
+import React, { useContext } from 'react';
+import { ThemeContext } from './ThemeContext';
+
+const Header = () => {
+  const { theme, toggleTheme } = useContext(ThemeContext);
+
+  return (
+    <div>
+      {/* Your header content */}
+      <button onClick={toggleTheme}>Toggle Theme</button>
+      <p>Current Theme: {theme}</p>
+    </div>
+  );
+};
+
+export default Header;
+
+
