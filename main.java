@@ -3,6 +3,8 @@
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  display: flex;
+  flex-direction: column;
 }
 
 .form-group {
@@ -10,28 +12,28 @@
 }
 
 .label {
-  display: block;
+  display: inline-block;
+  width: 120px; /* Adjust width as needed */
   margin-bottom: 5px;
 }
 
-.select-wrapper {
-  position: relative;
+.input-wrapper {
+  display: flex;
+  align-items: center;
 }
 
-.select-wrapper::after {
-  content: '\25BE';
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
-}
-
-.select {
-  width: 100%;
+.input-wrapper input,
+.select-wrapper select {
+  flex: 1;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
+
+.editor-wrapper {
+  flex: 1;
+}
+
 
 
 import React, { useState } from 'react';
@@ -62,15 +64,13 @@ const CreateRequest = () => {
 
   return (
     <div className="email-form">
-      <div className="form-group">
+      <div className="form-group input-wrapper">
         <label className="label">From:</label>
         <input type="text" value={from} onChange={handleFromChange} />
       </div>
-      <div className="form-group">
+      <div className="form-group input-wrapper">
         <label className="label">Subject:</label>
         <input type="text" value={subject} onChange={handleSubjectChange} />
-      </div>
-      <div className="form-group">
         <label className="label">Classify Message:</label>
         <div className="select-wrapper">
           <select className="select" value={classification} onChange={handleClassificationChange}>
@@ -81,7 +81,7 @@ const CreateRequest = () => {
           </select>
         </div>
       </div>
-      <div className="form-group">
+      <div className="form-group editor-wrapper">
         <label className="label">Message:</label>
         <Editor value={editorHtml} onChange={handleEditorChange} />
       </div>
@@ -90,4 +90,3 @@ const CreateRequest = () => {
 };
 
 export default CreateRequest;
-
