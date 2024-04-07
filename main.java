@@ -6,27 +6,23 @@ import './Editor.css';
 function Editor() {
   const [value, setValue] = useState('');
 
-  console.log(value);
-
-  const handlePaste = (e) => {
-    e.preventDefault();
-    const clipboardData = e.clipboardData || window.clipboardData;
+  const handlePaste = (event) => {
+    event.preventDefault();
+    const clipboardData = event.clipboardData || window.clipboardData;
     const pastedData = clipboardData.getData('text/plain');
 
-    // Example: parse pasted data to identify and format tables
-    const formattedData = formatPastedData(pastedData);
-
-    const newValue = value + formattedData;
-    setValue(newValue);
+    // Check if the pasted data contains tabular structure
+    if (isTabularData(pastedData)) {
+      const formattedData = `<table>${pastedData}</table>`;
+      document.execCommand('insertHTML', false, formattedData);
+    } else {
+      document.execCommand('insertText', false, pastedData);
+    }
   };
 
-  const formatPastedData = (data) => {
-    // Example: Parse and format data as tables (specific to your needs)
-    // This is a simplified example, you may need to adjust this based on your data format
-    const lines = data.split('\n');
-    const rows = lines.map((line) => `<tr><td>${line.split('\t').join('</td><td>')}</td></tr>`);
-    const table = `<table>${rows.join('')}</table>`;
-    return table;
+  const isTabularData = (data) => {
+    // Example check for tabular data based on tab separation
+    return data.includes('\t');
   };
 
   const toolbarOptions = [
