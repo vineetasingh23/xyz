@@ -1,53 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import './Editor.css';
+import 'quill-better-table/dist/quill-better-table.css'; // Import Quill Better Table styles
+import { Quill } from 'react-quill'; // Import Quill instance
+import QuillBetterTable from 'quill-better-table'; // Import Quill Better Table module
+
+// Register Quill Better Table module
+Quill.register('modules/better-table', QuillBetterTable);
 
 function Editor() {
   const [value, setValue] = useState('');
+  let quillRef;
 
-  const handlePaste = (event) => {
-    event.preventDefault();
-    const clipboardData = event.clipboardData || window.clipboardData;
-    const pastedData = clipboardData.getData('text/plain');
-
-    // Check if the pasted data contains tabular structure
-    if (isTabularData(pastedData)) {
-      const rows = pastedData.split('\n').map(row => `<tr>${row.split('\t').map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('');
-      const table = `<table>${rows}</table>`;
-      document.execCommand('insertHTML', false, table);
-    } else {
-      document.execCommand('insertText', false, pastedData);
+  useEffect(() => {
+    if (quillRef) {
+      // Initialize Quill with Better Table module
+      quillRef.getEditor().enable(false); // Disable the editor temporarily
+      quillRef.getEditor().addModule('better-table', true); // Add the Better Table module
+      quillRef.getEditor().enable(true); // Re-enable the editor
     }
-  };
+  }, [quillRef]);
 
-  const isTabularData = (data) => {
-    // Example check for tabular data based on tab separation
-    return data.includes('\t');
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      ['blockquote', 'code-block'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'script': 'sub' }, { 'script': 'super' }],
+      [{ 'direction': 'rtl' }],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      ['link', 'image', 'video'],
+      ['clean'],
+    ],
+    better-table: true, // Enable Better Table module
   };
-
-  const toolbarOptions = [
-    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    ['blockquote', 'code-block'],
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-    [{ 'script': 'sub' }, { 'script': 'super' }],
-    [{ 'direction': 'rtl' }],
-    [{ 'size': ['small', false, 'large', 'huge'] }],
-    [{ 'color': [] }, { 'background': [] }],
-    [{ 'align': [] }],
-    ['link', 'image', 'video'],
-    ['clean'],
-  ];
 
   return (
     <div className='Editor'>
       <ReactQuill
-        modules={{ toolbar: toolbarOptions }}
+        ref={(el) => { quillRef = el; }}
+        modules={modules}
         theme='snow'
         value={value}
         onChange={setValue}
-        onPaste={handlePaste}
       />
     </div>
   );
