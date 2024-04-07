@@ -13,8 +13,9 @@ function Editor() {
 
     // Check if the pasted data contains tabular structure
     if (isTabularData(pastedData)) {
-      const formattedData = `<table>${pastedData}</table>`;
-      document.execCommand('insertHTML', false, formattedData);
+      const rows = pastedData.split('\n').map(row => `<tr>${row.split('\t').map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('');
+      const table = `<table>${rows}</table>`;
+      document.execCommand('insertHTML', false, table);
     } else {
       document.execCommand('insertText', false, pastedData);
     }
