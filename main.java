@@ -26,21 +26,32 @@ function Editor() {
     toolbar: toolbarOptions,
     clipboard: {
       matchVisual: false, // Disables Quill's default HTML paste handler
-      matchers: [
-        [Node.ELEMENT_NODE, (node, delta) => {
-          if (node.tagName && node.tagName.toLowerCase() === 'table') {
-            const html = node.outerHTML;
-            return { ops: [{ insert: html }] };
-          }
-          return delta;
-        }],
-      ],
     },
   };
 
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'blockquote', 'code-block',
+    'list', 'bullet',
+    'script', 'sub', 'super',
+    'direction',
+    'size',
+    'color', 'background',
+    'align',
+    'link', 'image', 'video',
+    'clean',
+  ];
+
   return (
     <div className='Editor'>
-      <ReactQuill modules={modules} theme='snow' value={value} onChange={setValue} />
+      <ReactQuill
+        modules={modules}
+        formats={formats}
+        theme='snow'
+        value={value}
+        onChange={setValue}
+      />
     </div>
   );
 }
