@@ -1,10 +1,8 @@
-// Import necessary modules and styles
 import React, { useEffect, useRef } from 'react';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 import './editor.css'; // Import custom CSS file
 
-// Custom clipboard handler
 const CustomClipboard = Quill.import('modules/clipboard');
 const Delta = Quill.import('delta');
 
@@ -56,13 +54,12 @@ class PlainClipboard extends CustomClipboard {
 
 Quill.register('modules/clipboard', PlainClipboard, true);
 
-// Quill Editor component
 function Editor() {
   const editorRef = useRef(null);
 
   useEffect(() => {
     if (editorRef.current) {
-      new Quill(editorRef.current, {
+      const quill = new Quill(editorRef.current, {
         theme: 'snow',
         modules: {
           toolbar: [
@@ -83,6 +80,9 @@ function Editor() {
           },
         },
       });
+      return () => {
+        quill.destroy();
+      };
     }
   }, []);
 
