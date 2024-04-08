@@ -1,4 +1,33 @@
 import React, { useState } from 'react';
+import ReactQuill from 'react-quill'; // Import React Quill
+import 'react-quill/dist/quill.snow.css'; // Import Quill styles
+import './CreateRequest.css'; // Import your custom CSS file
+
+const CreateRequest: React.FC = () => {
+  const [editorHtml, setEditorHtml] = useState('');
+
+  const handleEditorChange = (html: string) => {
+    setEditorHtml(html);
+  };
+
+  return (
+    <div className="email-form">
+      {/* Other form components */}
+      <div className="form-group editor-wrapper">
+        <label className="message-heading">Message:</label>
+        <div className="custom-editor-wrapper"> {/* Custom editor wrapper */}
+          <ReactQuill
+            value={editorHtml} // Ensure value prop is correctly passed
+            onChange={handleEditorChange} // Ensure onChange prop is correctly passed
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CreateRequest;
+import React, { useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './CreateRequest.css';
