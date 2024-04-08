@@ -1,3 +1,54 @@
+import React, { useState } from 'react';
+import ReactQuill, { Quill } from 'react-quill';
+import 'react-quill/dist/quill.snow.css'; // or another Quill theme
+import 'quill-table-ui/dist/index.css'; // Quill Table UI styles
+import { Table } from 'quill-table-ui';
+
+const EditorWithTable = () => {
+  const [editorHtml, setEditorHtml] = useState('');
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'align': [] }],
+      ['link', 'image'],
+      ['table'],
+      ['clean']
+    ],
+    table: true // Enable table module
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'align',
+    'link', 'image',
+    'table'
+  ];
+
+  const handleEditorChange = (content) => {
+    setEditorHtml(content);
+  };
+
+  return (
+    <div>
+      <h1>React Quill Editor with Table</h1>
+      <ReactQuill
+        theme="snow" // or use another Quill theme
+        modules={modules}
+        formats={formats}
+        value={editorHtml}
+        onChange={handleEditorChange}
+      />
+      <Table />
+    </div>
+  );
+};
+
+export default EditorWithTable;
 import React, { useEffect, useRef } from 'react';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
