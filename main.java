@@ -75,8 +75,6 @@ function Editor() {
             [{ 'direction': 'rtl' }],
             [{ 'size': ['small', false, 'large', 'huge'] }],
             [{ 'color': [] }, { 'background': [] }],
-            [{ 'font': [] }],
-            [{ 'align': [] }],
             ['link', 'image', 'video'],
             ['clean'],
           ],
