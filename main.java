@@ -56,10 +56,11 @@ Quill.register('modules/clipboard', PlainClipboard, true);
 
 function Editor() {
   const editorRef = useRef(null);
+  let quill = null;
 
   useEffect(() => {
     if (editorRef.current) {
-      const quill = new Quill(editorRef.current, {
+      quill = new Quill(editorRef.current, {
         theme: 'snow',
         modules: {
           toolbar: [
@@ -80,10 +81,13 @@ function Editor() {
           },
         },
       });
-      return () => {
-        quill.destroy();
-      };
     }
+    return () => {
+      if (quill) {
+        quill.deleteAt(0, quill.getLength());
+        quill = null;
+      }
+    };
   }, []);
 
   return <div ref={editorRef} />;
