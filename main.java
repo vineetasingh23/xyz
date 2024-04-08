@@ -1,3 +1,67 @@
+import React, { useState } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import './CreateRequest.css';
+
+const CreateRequest: React.FC = () => {
+  const [from, setFrom] = useState('');
+  const [subject, setSubject] = useState('');
+  const [classification, setClassification] = useState('');
+  const [editorHtml, setEditorHtml] = useState('');
+
+  const handleFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFrom(e.target.value);
+  };
+
+  const handleSubjectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSubject(e.target.value);
+  };
+
+  const handleClassificationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setClassification(e.target.value);
+  };
+
+  const handleEditorChange = (html: string) => {
+    setEditorHtml(html);
+  };
+
+  const handleCreateRequest = () => {
+    // Save the contents of the email somewhere
+    console.log('Email Contents:', { from, subject, classification, editorHtml });
+
+    // Reset the editor to its initial state
+    setFrom('');
+    setSubject('');
+    setClassification('');
+    setEditorHtml('');
+  };
+
+  return (
+    <div className="email-form">
+      <div className="form-group">
+        <label className="label">From:</label>
+        <input type="text" value={from} onChange={handleFromChange} />
+      </div>
+      <div className="form-group">
+        <label className="label">Subject:</label>
+        <input type="text" value={subject} onChange={handleSubjectChange} />
+        <select className="select" value={classification} onChange={handleClassificationChange}>
+          <option value="" disabled hidden>Select Classification</option>
+          <option value="internal">Internal</option>
+          <option value="external">External</option>
+          <option value="confidential">Strictly Confidential</option>
+        </select>
+      </div>
+      <div className="form-group">
+        <label className="message-heading">Message:</label>
+        <ReactQuill value={editorHtml} onChange={handleEditorChange} />
+      </div>
+      <button onClick={handleCreateRequest}>Create Request</button>
+    </div>
+  );
+};
+
+export default CreateRequest;
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // or another Quill theme
