@@ -1,15 +1,48 @@
-<button
-        style={{
-          padding: '8px 16px',
-          backgroundColor: '#007bff',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          marginRight: '8px', // Add margin-right for spacing
-          transition: 'background-color 0.3s ease',
-        }}
-        onClick={toggleBcc}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0056b3')} // Hover color
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#007bff')} // Original color
-      >
+<div className="form-group" style={{ display: 'flex', justifyContent: 'center' }}>
+  {/* Upload Button */}
+  <Button
+    variant="contained"
+    sx={{
+      borderRadius: '10px',
+      textTransform: 'none',
+      marginBottom: 1,
+      marginTop: 1,
+      backgroundColor: 'rgba(183, 216, 255, 0.15)',
+      height: 25,
+      fontSize: '11px',
+      color: '#000000',
+      marginLeft: 'auto',
+      marginRight: 1,
+      boxShadow: 30,
+      ':hover': {
+        boxShadow: 30,
+        backgroundColor: 'rgba(183, 216, 255, 0.9)',
+      },
+    }}
+    onClick={handleUploadFiles}
+  >
+    <AttachmentOutlinedIcon sx={{ height: 20, width: 20, alignSelf: 'center' }} />
+    <span> Upload</span>
+  </Button>
+  <Button
+    variant="contained"
+    sx={{
+      borderRadius: '10px',
+      textTransform: 'none',
+      marginBottom: 1,
+      marginTop: 1,
+      backgroundColor: 'rgba(183, 216, 255, 0.15)',
+      height: 25,
+      fontSize: '11px',
+      color: '#000000',
+      ':hover': {
+        boxShadow: 30,
+        backgroundColor: 'rgba(183, 216, 255, 0.9)',
+      },
+    }}
+    onClick={handleRemoveFiles}
+  >
+    <ClearIcon sx={{ height: 20, width: 20, alignSelf: 'center', marginRight: 1 }} />
+    <span> Remove All</span>
+  </Button>
+</div>
