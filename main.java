@@ -1,45 +1,50 @@
-.select {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 8px;
-  width: 200px; /* Adjust width as needed */
-  font-size: 14px;
-}
+import React from "react";
+import { Box, Button, Stack } from "@mui/material";
+import ReturnToTableButton from "../ReturnToTableButton";
+import Table from "./Table";
+import abc from "../abc"; // Import abc component
+import { useTheme } from "../../ThemeContext";
 
-.select option {
-  background-color: #fff; /* Background color of options */
-  color: #000; /* Text color of options */
-}
+type Props = {
+  // Define your props if needed
+};
 
-/* Style for the selected option */
-.select option:checked {
-  background-color: #007bff; /* Background color when option is selected */
-  color: #fff; /* Text color when option is selected */
-}
+const CommonBin = (props: Props) => {
+  const [CommonBinData, setCommonBinData] = React.useState(/* initial data */);
+  const { currentTheme, toggleTheme } = useTheme(); // Get currentTheme and toggleTheme from context
 
+  const handleMoveToWorkflow = () => {
+    // Handle move to workflow action
+  };
 
+  return (
+    <Box sx={{ height: "100%", width: "100%" }}>
+      <Stack direction="row">
+        <ReturnToTableButton />
+        <Button
+          sx={{
+            backgroundColor: currentTheme.background, // Use current theme's background color
+            color: currentTheme.text, // Use current theme's text color
+            position: "absolute",
+            right: 10,
+            borderRadius: "5px",
+            fontSize: "10px",
+            "&:hover": {
+              backgroundColor: currentTheme.background, // Use current theme's background color on hover
+            },
+          }}
+          onClick={toggleTheme} // Toggle the theme on button click
+        >
+          <span>{currentTheme.name === "light" ? "Dark Mode" : "Light Mode"}</span>
+        </Button>
+      </Stack>
+      <Box sx={{ height: "68%" }}>
+        <Table data={CommonBinData} />
+      </Box>
+      {/* Render abc component */}
+      <abc />
+    </Box>
+  );
+};
 
-
-<div className="select-wrapper" style={{ marginLeft: 7 }}>
-  <select className="select" value={from} onChange={handleFromChange}>
-    <option value="" hidden>Select</option>
-    <option value="Demo 1">Demo 1</option>
-    <option value="Demo 2">Demo 2</option>
-    <option value="Demo 3">Demo 3</option>
-    <option value="Demo 4">Demo 4</option>
-  </select>
-</div>
-<div className="form-group input-wrapper">
-  <label className="label" style={{ fontSize: '15px', fontWeight: 'bold', marginRight: 7 }}>Subject:</label>
-  <input type="text" value={subject} onChange={handleSubjectChange} />
-</div>
-<div className="select-wrapper">
-  <select className="select" value={classification} onChange={handleClassificationChange}>
-    <option value="" hidden>Select classification</option>
-    <option value="internal">Internal</option>
-    <option value="public">Public</option>
-    <option value="confidential">Confidential</option>
-    <option value="external_communication">External Communication</option>
-    <option value="strictly_confidential">Strictly Confidential</option>
-  </select>
-</div>
+export default CommonBin;
