@@ -1,40 +1,50 @@
-import React, { createContext, useState } from "react";
+import React from "react";
+import { Box, Button, Stack } from "@mui/material";
+import ReturnToTableButton from "../ReturnToTableButton";
+import Table from "./Table";
+import abc from "../abc"; // Import abc component
+import { useTheme } from "../../ThemeContext";
 
-// Define the context
-const ThemeContext = createContext<any>(null);
+type Props = {
+  // Define your props if needed
+};
 
-// Define the context provider
-export const ThemeProvider: React.FC = ({ children }) => {
-  const lightTheme = {
-    name: "light",
-    // Define light theme colors and styles
-    // For example:
-    background: "#ffffff",
-    text: "#000000",
-  };
+const CommonBin = (props: Props) => {
+  const [CommonBinData, setCommonBinData] = React.useState(/* initial data */);
+  const { currentTheme, toggleTheme } = useTheme(); // Get currentTheme and toggleTheme from context
 
-  const darkTheme = {
-    name: "dark",
-    // Define dark theme colors and styles
-    // For example:
-    background: "#333333",
-    text: "#ffffff",
-  };
-
-  const [currentTheme, setCurrentTheme] = useState(lightTheme);
-
-  const toggleTheme = () => {
-    setCurrentTheme((prevTheme) =>
-      prevTheme === lightTheme ? darkTheme : lightTheme
-    );
+  const handleMoveToWorkflow = () => {
+    // Handle move to workflow action
   };
 
   return (
-    <ThemeContext.Provider value={{ currentTheme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+    <Box sx={{ height: "100%", width: "100%" }}>
+      <Stack direction="row">
+        <ReturnToTableButton />
+        <Button
+          sx={{
+            backgroundColor: currentTheme.background, // Use current theme's background color
+            color: currentTheme.text, // Use current theme's text color
+            position: "absolute",
+            right: 10,
+            borderRadius: "5px",
+            fontSize: "10px",
+            "&:hover": {
+              backgroundColor: currentTheme.background, // Use current theme's background color on hover
+            },
+          }}
+          onClick={toggleTheme} // Toggle the theme on button click
+        >
+          <span>{currentTheme.name === "light" ? "Dark Mode" : "Light Mode"}</span>
+        </Button>
+      </Stack>
+      <Box sx={{ height: "68%" }}>
+        <Table data={CommonBinData} />
+      </Box>
+      {/* Render abc component */}
+      <abc />
+    </Box>
   );
 };
 
-// Define the context consumer
-export const useTheme = () => React.useContext(ThemeContext);
+export default CommonBin;
