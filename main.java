@@ -48,3 +48,20 @@ const CommonBin = (props: Props) => {
 };
 
 export default CommonBin;
+
+
+
+import React from "react";
+import ReactDOM from "react-dom";
+import App from "./App";
+import { ThemeProvider } from "./constants/themeContext";
+
+ReactDOM.render(
+  <React.StrictMode>
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  </React.StrictMode>,
+  document.getElementById("root")
+);
+
