@@ -1,28 +1,27 @@
-const StyledSelect = styled(Select)(({ theme }) => ({
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import styled from '@emotion/styled';
+
+const StyledSelect = styled(Select)(({ lightTheme }) => ({
+  position: "relative",
   height: "35px",
   width: 210,
-  alignItems: "center",
   backgroundColor: "#ffffff",
   borderStyle: "solid",
-  borderColor: theme.palette.mode === 'light' ? theme.fieldblue : theme.darkFieldblue,
+  borderColor: lightTheme.fieldblue,
   borderRadius: 10,
-  "& .MuiInputLabel-root": {
-    background: "#ffffff",
-    padding: "0 8px",
-    zIndex: 1, // Ensure label appears above the input border
-  },
   "& .MuiOutlinedInput-root": {
-    "& .MuiSelect-root": {
-      paddingTop: "8px", // Adjust top padding for the text visibility
-    },
+    position: "relative",
     "& .MuiOutlinedInput-notchedOutline": {
       border: "none",
     },
     "&:hover .MuiOutlinedInput-notchedOutline": {
-      borderColor: theme.palette.mode === 'light' ? theme.fieldblue : theme.darkFieldblue,
+      borderColor: lightTheme.fieldblue,
     },
     "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
-      borderColor: theme.palette.mode === 'light' ? theme.primarycolor : theme.darkPrimarycolor,
+      borderColor: lightTheme.primarycolor,
+    },
+    "& .MuiSelect-root": {
+      background: "none", // Remove background color behind label value
     },
   },
 }));
