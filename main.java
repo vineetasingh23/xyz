@@ -20,8 +20,16 @@ const StyledSelect = styled(Select)(({ lightTheme }) => ({
     "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
       borderColor: lightTheme.primarycolor,
     },
-    "& .MuiSelect-root": {
-      background: "none", // Remove background color behind label value
+  },
+  "& .MuiSelect-select": {
+    "& option, & optgroup": {
+      backgroundColor: "transparent", // Remove background color behind options
+    },
+  },
+  "& .MuiInputLabel-root": {
+    color: lightTheme.darkGreen,
+    "&.Mui-focused": {
+      color: lightTheme.darkGreen,
     },
   },
 }));
