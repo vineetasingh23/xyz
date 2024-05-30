@@ -58,3 +58,53 @@ const StyledSelect = styled(Select)(({ lightTheme }) => ({
       ))}
   </StyledSelect>
 </FormControl>
+import React, { useRef } from 'react';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Button } from '@mui/material';
+import './ContentCopyAnimation.css';
+
+const ContentCopyAnimation = () => {
+  const iconRef = useRef(null);
+
+  const handleAnimation = () => {
+    if (iconRef.current) {
+      iconRef.current.classList.remove('animate');
+      void iconRef.current.offsetWidth;  // Trigger a reflow to restart the animation
+      iconRef.current.classList.add('animate');
+    }
+  };
+
+  return (
+    <div>
+      <ContentCopyIcon ref={iconRef} className="content-copy-icon" />
+      <Button variant="contained" color="primary" onClick={handleAnimation}>
+        Animate Icon
+      </Button>
+    </div>
+  );
+};
+
+export default ContentCopyAnimation;
+.content-copy-icon {
+  font-size: 40px; /* Adjust size as needed */
+  transition: transform 0.3s ease-in-out;
+}
+
+.content-copy-icon.animate {
+  transform: scale(1.5) rotate(20deg);
+}
+import React from 'react';
+import ContentCopyAnimation from './ContentCopyAnimation';
+
+function App() {
+  return (
+    <div className="App">
+      <ContentCopyAnimation />
+    </div>
+  );
+}
+
+export default App;
+
+
+    
