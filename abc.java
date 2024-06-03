@@ -7,13 +7,9 @@ import { makeStyles } from "@mui/styles";
 import clsx from "clsx";
 
 const useStyles = makeStyles((theme) => ({
-    refresh: {
-        marginTop: "20px",
-        cursor: "pointer",
-        margin: "auto",
+    refreshIcon: {
         "&.spin": {
             animation: "$spin 1s 1",
-            // pointerEvents:'none'
         }
     },
     "@keyframes spin": {
@@ -54,15 +50,14 @@ const RefreshButton: React.FC<Props> = () => {
 
     return (
         <Box onClick={refresh}>
-            <ColorButton
-                variant="contained"
-                size="small"
-                className={clsx({
-                    [classes.refresh]: true,
-                    spin: spin
-                })}
-            >
-                <RefreshIcon sx={{ mr: 0.5 }} />
+            <ColorButton variant="contained" size="small">
+                <RefreshIcon
+                    className={clsx({
+                        [classes.refreshIcon]: true,
+                        spin: spin
+                    })}
+                    sx={{ mr: 0.5 }}
+                />
                 Refresh
             </ColorButton>
         </Box>
