@@ -1,67 +1,53 @@
-import React from "react";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import { styled } from "@mui/material/styles";
+import React, { useState } from "react";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Box } from "@mui/material";
+import "../tableStyles.css";
 import { makeStyles } from "@mui/styles";
 import clsx from "clsx";
 
 const useStyles = makeStyles((theme) => ({
-    refreshIcon: {
-        "&.spin": {
-            animation: "$spin 1s 1",
+    copyIcon: {
+        cursor: "pointer",
+        transition: "transform 0.3s",
+        "&.animate": {
+            animation: "$bounce 0.5s",
         }
     },
-    "@keyframes spin": {
-        "0%": {
-            transform: "rotate(0deg)"
+    "@keyframes bounce": {
+        "0%, 100%": {
+            transform: "translateY(0)",
         },
-        "100%": {
-            transform: "rotate(360deg)"
+        "50%": {
+            transform: "translateY(-10px)",
         }
     }
 }));
 
-const ColorButton = styled(Button)(({ theme }) => ({
-    position: "absolute",
-    right: "1.4%",
-    borderRadius: "5px",
-    color: "white",
-    backgroundColor: theme.palette.mode === 'light' ? lightTheme.darkBlue : darkTheme.darkBlue,
-    "&:hover": {
-        color: "white",
-        fontWeight: "bold",
-    }
-}));
-
-type Props = {};
-
-const RefreshButton: React.FC<Props> = () => {
+export default (props: CustomCellRendererProps) => {
+    const [hovered, setHovered] = useState(false);
+    const [animate, setAnimate] = useState(false);
     const classes = useStyles();
-    const [spin, setSpin] = React.useState(false);
 
-    const refresh = () => {
-        setSpin(true);
+    const buttonClicked = async () => {
+        await navigator.clipboard.writeText(props.value);
+        alert("Text copied");
+        setAnimate(true);
         setTimeout(() => {
-            setSpin(false);
-            window.location.reload();
-        }, 1000);
+            setAnimate(false);
+        }, 500);
     };
 
     return (
-        <Box onClick={refresh}>
-            <ColorButton variant="contained" size="small">
-                <RefreshIcon
-                    className={clsx({
-                        [classes.refreshIcon]: true,
-                        spin: spin
-                    })}
-                    sx={{ mr: 0.5 }}
-                />
-                Refresh
-            </ColorButton>
-        </Box>
+        <ContentCopyIcon
+            className={clsx(classes.copyIcon, { animate })}
+            onClick={buttonClicked}
+            style={{
+                color: "iconblue",
+                height: "24px",
+                ...hovered && { color: "hoverColor" } // Optionally, change color on hover
+            }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        />
     );
 };
-
-export default RefreshButton;
