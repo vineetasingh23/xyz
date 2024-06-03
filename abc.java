@@ -1,51 +1,72 @@
-import React, { useState } from 'react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import React from "react";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import { styled } from "@mui/material/styles";
+import { makeStyles } from "@mui/styles";
+import clsx from "clsx";
 
-const EmailComposer = () => {
-  const [from, setFrom] = useState('');
-  const [subject, setSubject] = useState('');
-  const [classification, setClassification] = useState('internal');
-  const [editorHtml, setEditorHtml] = useState('');
+const useStyles = makeStyles((theme) => ({
+    refresh: {
+        marginTop: "20px",
+        cursor: "pointer",
+        margin: "auto",
+        "&.spin": {
+            animation: "$spin 1s 1",
+            // pointerEvents:'none'
+        }
+    },
+    "@keyframes spin": {
+        "0%": {
+            transform: "rotate(0deg)"
+        },
+        "100%": {
+            transform: "rotate(360deg)"
+        }
+    }
+}));
 
-  const handleFromChange = (e) => {
-    setFrom(e.target.value);
-  };
+const ColorButton = styled(Button)(({ theme }) => ({
+    position: "absolute",
+    right: "1.4%",
+    borderRadius: "5px",
+    color: "white",
+    backgroundColor: theme.palette.mode === 'light' ? lightTheme.darkBlue : darkTheme.darkBlue,
+    "&:hover": {
+        color: "white",
+        fontWeight: "bold",
+    }
+}));
 
-  const handleSubjectChange = (e) => {
-    setSubject(e.target.value);
-  };
+type Props = {};
 
-  const handleClassificationChange = (e) => {
-    setClassification(e.target.value);
-  };
+const RefreshButton: React.FC<Props> = () => {
+    const classes = useStyles();
+    const [spin, setSpin] = React.useState(false);
 
-  const handleEditorChange = (html) => {
-    setEditorHtml(html);
-  };
+    const refresh = () => {
+        setSpin(true);
+        setTimeout(() => {
+            setSpin(false);
+            window.location.reload();
+        }, 1000);
+    };
 
-  return (
-    <div>
-      <div>
-        <label>From:</label>
-        <input type="text" value={from} onChange={handleFromChange} />
-      </div>
-      <div>
-        <label>Subject:</label>
-        <input type="text" value={subject} onChange={handleSubjectChange} />
-        <select value={classification} onChange={handleClassificationChange}>
-          <option value="internal">Internal</option>
-          <option value="public">Public Use</option>
-          <option value="confidential">Confidential</option>
-          <option value="urgent">Urgent</option>
-        </select>
-      </div>
-      <div>
-        <label>Message:</label>
-        <ReactQuill theme="snow" value={editorHtml} onChange={handleEditorChange} />
-      </div>
-    </div>
-  );
+    return (
+        <Box onClick={refresh}>
+            <ColorButton
+                variant="contained"
+                size="small"
+                className={clsx({
+                    [classes.refresh]: true,
+                    spin: spin
+                })}
+            >
+                <RefreshIcon sx={{ mr: 0.5 }} />
+                Refresh
+            </ColorButton>
+        </Box>
+    );
 };
 
-export default EmailComposer;
+export default RefreshButton;
