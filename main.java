@@ -107,4 +107,35 @@ function App() {
 export default App;
 
 
-    
+    import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles((theme) => ({
+  iconContainer: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+  },
+  copyIcon: {
+    transition: 'transform 0.3s, opacity 0.3s',
+    opacity: 0,
+    '&:hover': {
+      opacity: 1,
+      transition: 'transform 0.3s, opacity 0.3s',
+    },
+    '&:active': {
+      opacity: 1,
+    },
+  },
+  animate: {
+    animation: '$bounce 0.5s',
+  },
+  '@keyframes bounce': {
+    '0%, 100%': {
+      transform: 'translateY(0)',
+    },
+    '50%': {
+      transform: 'translateY(-5px)',
+    },
+  },
+}));
