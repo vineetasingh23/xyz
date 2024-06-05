@@ -183,6 +183,106 @@ const CopyButton = (props) => {
       className={classes.iconContainer}
       onClick={handleContainerClick}
       onMouseEnter={() => setAnimate(true)}
+      onMouseLeave={() => setAnimate(f
+    >
+      {props.value}
+      <Tooltip
+        title={showTooltip ? "Copied!" : ""}
+        leaveDelay={500}
+        open={showTooltip}
+      >
+        <ContentCopyIcon
+          className={clsx(classes.copyIcon, { [classes.animate]: animate })}
+          style={{ color: "iconblue", height: 15 }}
+        />
+      </Tooltip>
+    </Box>
+  );
+};
+
+
+
+export default CopyButton;
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from 'react';
+import Tooltip from '@material-ui/core/Tooltip';
+import ContentCopyIcon from '@material-ui/icons/ContentCopy';
+import Box from '@material-ui/core/Box';
+import clsx from 'clsx';
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles((theme) => ({
+  iconContainer: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+    '&:hover $copyIcon': {
+      opacity: 1,
+      transition: 'opacity 0.3s',
+    },
+  },
+  copyIcon: {
+    transition: 'transform 0.3s, opacity 0.3s',
+    opacity: 0,
+    '&:active': {
+      opacity: 1,
+    },
+  },
+  animate: {
+    animation: '$bounce 0.5s',
+  },
+  '@keyframes bounce': {
+    '0%, 100%': {
+      transform: 'translateY(0)',
+    },
+    '50%': {
+      transform: 'translateY(-5px)',
+    },
+  },
+}));
+
+const CopyButton = (props) => {
+  const classes = useStyles();
+  const [animate, setAnimate] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const buttonClicked = () => {
+    setAnimate(true);
+    setShowTooltip(true);
+    setTimeout(() => {
+      setAnimate(false);
+    }, 1000); // Duration of the animation
+  };
+
+  useEffect(() => {
+    let timer;
+    if (showTooltip) {
+      timer = setTimeout(() => {
+        setShowTooltip(false);
+      }, 2000); // Tooltip will be visible for 2 seconds
+    }
+    return () => clearTimeout(timer);
+  }, [showTooltip]);
+
+  const handleContainerClick = () => {
+    // Implement your copy logic here
+    buttonClicked();
+  };
+
+  return (
+    <Box
+      className={classes.iconContainer}
+      onClick={handleContainerClick}
+      onMouseEnter={() => setAnimate(true)}
       onMouseLeave={() => setAnimate(false)}
     >
       {props.value}
@@ -201,3 +301,40 @@ const CopyButton = (props) => {
 };
 
 export default CopyButton;
+
+
+
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles((theme) => ({
+  iconContainer: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+    '&:hover $copyIcon': {
+      opacity: 1,
+      transition: 'opacity 0.3s',
+    },
+  },
+  copyIcon: {
+    transition: 'transform 0.3s, opacity 0.3s',
+    opacity: 0,
+    '&:active': {
+      opacity: 1,
+    },
+  },
+  animate: {
+    animation: '$bounce 0.5s',
+  },
+  '@keyframes bounce': {
+    '0%, 100%': {
+      transform: 'translateY(0)',
+    },
+    '50%': {
+      transform: 'translateY(-5px)',
+    },
+  },
+}));
+
+
