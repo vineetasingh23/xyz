@@ -139,3 +139,65 @@ const useStyles = makeStyles((theme) => ({
     },
   },
 }));
+
+
+
+
+import React, { useState, useEffect } from 'react';
+import Tooltip from '@material-ui/core/Tooltip';
+import ContentCopyIcon from '@material-ui/icons/ContentCopy';
+import Box from '@material-ui/core/Box';
+import clsx from 'clsx';
+import useStyles from './useStyles'; // Assuming you have a useStyles hook
+
+const CopyButton = (props) => {
+  const classes = useStyles();
+  const [animate, setAnimate] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const buttonClicked = () => {
+    setAnimate(true);
+    setShowTooltip(true);
+    setTimeout(() => {
+      setAnimate(false);
+    }, 1000); // Duration of the animation
+  };
+
+  useEffect(() => {
+    let timer;
+    if (showTooltip) {
+      timer = setTimeout(() => {
+        setShowTooltip(false);
+      }, 2000); // Tooltip will be visible for 2 seconds
+    }
+    return () => clearTimeout(timer);
+  }, [showTooltip]);
+
+  const handleContainerClick = () => {
+    // Implement your copy logic here
+    buttonClicked();
+  };
+
+  return (
+    <Box
+      className={classes.iconContainer}
+      onClick={handleContainerClick}
+      onMouseEnter={() => setAnimate(true)}
+      onMouseLeave={() => setAnimate(false)}
+    >
+      {props.value}
+      <Tooltip
+        title={showTooltip ? "Copied!" : ""}
+        leaveDelay={500}
+        open={showTooltip}
+      >
+        <ContentCopyIcon
+          className={clsx(classes.copyIcon, { [classes.animate]: animate })}
+          style={{ color: "iconblue", height: 15 }}
+        />
+      </Tooltip>
+    </Box>
+  );
+};
+
+export default CopyButton;
