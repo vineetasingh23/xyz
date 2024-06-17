@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import Button from '@mui/material/Button';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import ClearIcon from '@mui/icons-material/Clear';
-import DeleteIcon from '@mui/icons-material/Delete';
-import IconButton from '@mui/material/IconButton';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
+<Box sx={{ ml: 0, mr: 5, border: '1px solid #ccc', borderRadius: '4px', padding: '10px' }}>
+          <FormGroup>
+            <FormControlLabel
+              style={{ fontSize: 14, color: "black" }} // Example of style changes
+              value="CustomField1"
+              control={<CustomSwitch size="small" />}
+              label="Custom Field 1"
+              labelPlacement="start"
+              sx={{ color: "fontColor" }}
+              onChange={handleIsCustomField1}
+            />
+          </FormGroup>
+        </Box>
 import Paper from '@mui/material/Paper';
 
 // Styled component to hide the input element visually
