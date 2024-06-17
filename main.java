@@ -130,7 +130,7 @@ const handleRemoveFiles = (index: number) => {
         Remove All
       </Button>
 
-      {fileList.length > 0 && (
+      {fileList && fileList.length > 0 && (
         <TableContainer component={Paper} sx={{ height: "90%", pl: "30px", pr: "30px", mb: '10px' }}>
           <Table stickyHeader size="small" aria-label="simple table">
             <TableHead sx={{ borderBottom: 2, borderColor: "gray" }}>
@@ -142,7 +142,7 @@ const handleRemoveFiles = (index: number) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {fileList.map((file, index) => (
+              {Array.from(fileList).map((file, index) => (
                 <TableRow key={index}>
                   <TableCell align="center">{file.name}</TableCell>
                   <TableCell align="center">{(file.size / 1024).toFixed(2)} KB</TableCell>
@@ -161,7 +161,7 @@ const handleRemoveFiles = (index: number) => {
                           opacity: '0.9',
                         },
                       }}
-                      onClick={() => handleRemoveFile(index)}
+                      onClick={() => handleRemoveFiles(index)}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
@@ -171,9 +171,3 @@ const handleRemoveFiles = (index: number) => {
             </TableBody>
           </Table>
         </TableContainer>
-      )}
-    </div>
-  );
-};
-
-export default FileUploadComponent;
