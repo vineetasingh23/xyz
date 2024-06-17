@@ -57,14 +57,14 @@ const FileUploadComponent: React.FC = () => {
       .catch((err) => console.error(err));
   };
 
-  const handleRemoveFiles = (index: number) => {
-    if (fileList) {
-      const filesArray = Array.from(fileList);
-      const updatedFileList = filesArray.filter((_, i) => i !== index);
-      setFileList(new DataTransfer().files);
-      updatedFileList.forEach(file => new DataTransfer().items.add(file));
-    }
-  };
+const handleRemoveFiles = (index: number) => {
+  if (fileList) {
+    const updatedFileList = Array.from(fileList).filter((_, i) => i !== index);
+    const dataTransfer = new DataTransfer();
+    updatedFileList.forEach(file => dataTransfer.items.add(file));
+    setFileList(dataTransfer.files);
+  }
+};
 
   return (
     <div>
