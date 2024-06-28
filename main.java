@@ -1,9 +1,16 @@
-const formatQueuePath = (name) => {
-    return name.replace(/\s+/g, '').toLowerCase().replace(/-/g, '_');
-};
-
- const queuePath = value.queueId === "0" ? 'queue/workflow' : `queue/${formatQueuePath(value.name)}`;
-                    const fullPath = `/${queuePath}`;
-
-backgroundColor: isActive(queuePath) ? 'sideBarClickColor' : 'inherit',
-                               
+ const getRulesList = async () => {
+    try {
+      const url = ApiEndPoints.ROOT + ApiEndPoints.VIEW_RULES;
+      const axiosConfig: AxiosRequestConfig = {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        }
+      };
+      const response = await ApiConfig.getCall(url, axiosConfig);
+      setRulesList(response.data.items);  // Assuming the response data structure
+      console.log(response);
+    } catch (error) {
+      console.error("Error fetching rules list:", error);
+    }
+  };
