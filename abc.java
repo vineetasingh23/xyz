@@ -1,64 +1,64 @@
-import React, { useState } from "react";
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Box } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import clsx from "clsx";
-import "../tableStyles.css";
+const CreateRules = () => {
+  const [rulesList, setRulesList] = useState([]);
 
-const useStyles = makeStyles((theme) => ({
-    iconContainer: {
-        position: "relative",
-        display: "inline-block",
-    },
-    copyIcon: {
-        cursor: "pointer",
-        transition: "transform 0.3s, opacity 0.3s",
-        opacity: 0,
-    },
-    visible: {
-        opacity: 1,
-    },
-    animate: {
-        animation: "$bounce 0.5s",
-    },
-    "@keyframes bounce": {
-        "0%, 100%": {
-            transform: "translateY(0)",
-        },
-        "50%": {
-            transform: "translateY(-10px)",
-        }
-    }
-}));
+  const getCreateRules = async () => {
+    // Fetch logic here
+  };
 
-export default (props: CustomCellRendererProps) => {
-    const [animate, setAnimate] = useState(false);
-    const classes = useStyles();
+  useEffect(() => {
+    getCreateRules();
+  }, []);
 
-    const buttonClicked = async () => {
-        await navigator.clipboard.writeText(props.value);
-        alert("Text copied");
-        setAnimate(true);
-        setTimeout(() => {
-            setAnimate(false);
-        }, 500);
+  const handleDelete = async (id) => {
+    await deleteItem(id);
+    // Optionally refetch the list or update the state to remove the deleted item
+    setRulesList(rulesList.filter(item => item.id !== id));
+  };
+
+  return (
+    <div>
+      {/* Other components and logic */}
+      <ItemList items={rulesList} onDelete={handleDelete} />
+    </div>
+  );
+};
+
+
+
+
+
+import axios from 'axios';
+import { ApiEndPoints } from '../Constants/ApiEndPoints';
+
+const deleteItem = async (id) => {
+  try {
+    const url = `${ApiEndPoints.ROOT}${ApiEndPoints.DELETE_RULE}/${id}`;
+    const axiosConfig = {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
     };
 
-    return (
-        <Box
-            className={classes.iconContainer}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            style={{ position: "relative", display: "inline-block" }}
-        >
-            <ContentCopyIcon
-                className={clsx(classes.copyIcon, { [classes.visible]: hovered, [classes.animate]: animate })}
-                onClick={buttonClicked}
-                style={{
-                    color: "iconblue",
-                    height: "24px"
-                }}
-            />
-        </Box>
-    );
+    const response = await axios.delete(url, axiosConfig);
+    console.log('Delete successful:', response);
+    // Optionally update your state here
+  } catch (error) {
+    console.error('Error deleting item:', error);
+  }
+};
+import DeleteIcon from '@mui/icons-material/Delete';
+
+// Assuming you have a list of items to display
+const ItemList = ({ items, onDelete }) => {
+  return (
+    <ul>
+      {items.map((item) => (
+        <li key={item.id}>
+          {item.name}
+          <DeleteIcon onClick={() => onDelete(item.id)} />
+        </li>
+      ))}
+    </ul>
+  );
 };
