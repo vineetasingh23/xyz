@@ -125,3 +125,37 @@
 };
 
 export default CreateRules;
+
+
+
+
+
+
+
+  const handleSubmit = async () => {
+    const payload = {
+      conditionParams: [
+        {
+          condition: condition,
+          operator: operators,
+          value: conditionOperand
+        }
+      ],
+      actionParams: [
+        {
+          parameter: action,
+          actionValue: actionValue
+        }
+      ],
+      createdBy: createdBy,
+      mailGroup: mailGroup,
+      rulePriority: rulePriority
+    };
+
+    try {
+      const response = await ApiConfig.postCall("/your-api-endpoint", payload);
+      console.log("Response:", response.data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
