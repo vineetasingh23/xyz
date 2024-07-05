@@ -1,5 +1,11 @@
 const selectedCondition = response.conditionParams.find(c => c.value === condition);
+    // Get the condition value to use in the payload
+    const conditionValue = selectedCondition ? selectedCondition.condition : null;
+
+    // Find the operator object from operatorParams where `value` matches the selected operator
     const selectedOperator = response.operatorParams.find(o => o.value === operators);
+    // Get the operator value to use in the payload
+    const operatorValue = selectedOperator ? selectedOperator.operator : null;
     
     // Map the condition and operator values to the new condition object
     setConditions([
