@@ -1,3 +1,9 @@
+ const [actionValue, setActionValue] = useState("");
+  const [createdBy, setCreatedBy] = useState("vineeta-a.singhadb.com");
+  const [mailGroup, setMailGroup] = useState("999996");
+  const [rulePriority, setRulePriority] = useState(1);
+
+
  Create Actions
         </Box>
         <Box
