@@ -1,5 +1,18 @@
-      setConditions([...conditions, { condition, operator: operators, value: conditionOperand }]);
-      setActions([...actions, { parameter: response.actionParams.findIndex((a) => a.actionValue === action), actionValue: action }]);
+const selectedCondition = response.conditionParams.find(c => c.value === condition);
+    const selectedOperator = response.operatorParams.find(o => o.value === operators);
+    
+    // Map the condition and operator values to the new condition object
+    setConditions([
+      ...conditions, 
+      { 
+        condition: selectedCondition,  // Here you can store the full object or just its value
+        operator: selectedOperator,    // Here you can store the full object or just its value
+        value: conditionOperand 
+      }
+    ]);
+
+
+setActions([...actions, { parameter: response.actionParams.findIndex((a) => a.actionValue === action), actionValue: action }]);
   const handleSave = async () => {
     const payload = {
       actionParams: actions,
