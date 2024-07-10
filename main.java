@@ -18,3 +18,10 @@ const Loader = () => {
 };
 
 export default Loader;
+
+
+   {viewRules.length === 0 ? (
+            <Loader />
+          ) : (
+            <RulesetList rulesList={viewRules} />
+          )}
