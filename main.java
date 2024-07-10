@@ -1,29 +1,48 @@
-// Loader.js
-import React from 'react';
-import { CircularProgress, Box } from '@mui/material';
+const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-const Loader = () => {
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100%',
-      }}
-    >
-      <CircularProgress />
-    </Box>
+  const handleDelete = (ruleid) => {
+    // Replace this with your delete logic
+    deleteRule(ruleid)
+      .then(response => {
+        setSnackbarMessage('Deleted successfully');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+      })
+      .catch(error => {
+        setSnackbarMessage('Failed to delete');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
+
+
+
+
+
+
+
+
+
+   </TableBody>
+      </Table>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 
-export default Loader;
-
-
- {isLoading ? (
-            <Loader marginTop="50px" /> // You can adjust the marginTop value here
-          ) : viewRules.length === 0 ? (
-            <Typography>No data to display</Typography>
-          ) : (
-            <RulesetList rulesList={viewRules} />
-          )}
+export default YourComponent;
