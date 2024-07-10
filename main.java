@@ -20,8 +20,10 @@ const Loader = () => {
 export default Loader;
 
 
-   {viewRules.length === 0 ? (
-            <Loader />
+ {isLoading ? (
+            <Loader marginTop="50px" /> // You can adjust the marginTop value here
+          ) : viewRules.length === 0 ? (
+            <Typography>No data to display</Typography>
           ) : (
             <RulesetList rulesList={viewRules} />
           )}
