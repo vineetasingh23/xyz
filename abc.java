@@ -36,3 +36,49 @@ const SnackbarComponent = ({
 };
 
 export default SnackbarComponent;
+
+
+
+
+// App.jsx or any other parent component
+import React, { useState } from 'react';
+import SnackbarComponent from './SnackbarComponent';
+
+function App() {
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+
+  const handleOpenSnackbar = (message, severity) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
+  return (
+    <div>
+      <button onClick={() => handleOpenSnackbar('This is a success message!', 'success')}>
+        Show Success Snackbar
+      </button>
+      <button onClick={() => handleOpenSnackbar('This is an error message!', 'error')}>
+        Show Error Snackbar
+      </button>
+      <SnackbarComponent
+        snackbarOpen={snackbarOpen}
+        snackbarMessage={snackbarMessage}
+        snackbarSeverity={snackbarSeverity}
+        handleCloseSnackbar={handleCloseSnackbar}
+      />
+    </div>
+  );
+}
+
+export default App;
+
