@@ -1,14 +1,4 @@
-  const filteredQueues = useMemo(
-    () =>
-      queues?.filter((queue) =>
-        queue.name.toLowerCase().includes(searchInput.toLowerCase())
-      ),
-    [queues, searchInput]
-  );
-
-
-
-{queues?.length > 7 && (
+ {queues?.length > 7 && (
           <ListItem disablePadding sx={{ display: "flex", justifyContent: "center" }}>
             <TextField
               variant="outlined"
@@ -86,4 +76,19 @@
   );
 }
 
-export default Sidebar;
+
+
+
+                    const [searchInput, setSearchInput] = useState('');
+
+  const handleSearchChange = (event) => {
+    setSearchInput(event.target.value);
+  };
+
+  const filteredQueues = useMemo(
+    () =>
+      queues?.filter((queue) =>
+        queue.name.toLowerCase().includes(searchInput.toLowerCase())
+      ),
+    [queues, searchInput]
+  );
