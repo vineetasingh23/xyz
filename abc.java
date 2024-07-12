@@ -1,38 +1,31 @@
-  const filteredQueues = useMemo(
-    () =>
-      queues?.filter((queue) =>
-        queue.name.toLowerCase().includes(searchInput.toLowerCase())
-      ),
-    [queues, searchInput]
+const [searchInput, setSearchInput] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  const searchFieldRef = useRef(null);
+
+  // Filtered queues based on search input
+  const filteredQueues = useMemo(() => {
+    if (!showSearchResults) return queues;  // Show all queues if search results are hidden
+    return queues?.filter((queue) =>
+      queue.name.toLowerCase().includes(searchInput.toLowerCase())
+    );
+  }, [queues, searchInput, showSearchResults]);
+
+  // Debounced function for handling search input change
+  const debouncedSearch = useCallback(
+    debounce((input) => {
+      setSearchInput(input);
+      setShowSearchResults(true);  // Show search results when input changes
+    }, 2000), // 2 seconds debounce delay
+    []
   );
 
-  // Focus the search field on render
-  React.useEffect(() => {
+  const handleSearchChange = (event) => {
+    debouncedSearch(event.target.value); // Use debounced function
+  };
+
+  useEffect(() => {
     if (searchFieldRef.current) {
       searchFieldRef.current.focus();
     }
   }, []);
-
-
-
-
-  sx={{
-    height: "55vh",
-    marginRight: "15px",
-    overflowY: "auto",
-    overflowX: "hidden",
-    '&::-webkit-scrollbar': {
-      width: '8px', /* Width of the scrollbar */
-    },
-    '&::-webkit-scrollbar-track': {
-      background: '#1d1d1d', /* Track background color */
-    },
-    '&::-webkit-scrollbar-thumb': {
-      background: '#888', /* Scrollbar thumb color */
-      borderRadius: '10px', /* Thumb border radius */
-    },
-    '&::-webkit-scrollbar-thumb:hover': {
-      background: '#555', /* Scrollbar thumb color on hover */
-    },
-  }}
->
