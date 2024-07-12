@@ -1,4 +1,14 @@
-  {queues?.length > 7 && (
+  const filteredQueues = useMemo(
+    () =>
+      queues?.filter((queue) =>
+        queue.name.toLowerCase().includes(searchInput.toLowerCase())
+      ),
+    [queues, searchInput]
+  );
+
+
+
+{queues?.length > 7 && (
           <ListItem disablePadding sx={{ display: "flex", justifyContent: "center" }}>
             <TextField
               variant="outlined"
