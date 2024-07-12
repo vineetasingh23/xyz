@@ -1,84 +1,118 @@
-// SnackbarComponent.jsx
-import React from 'react';
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
-import Slide from '@mui/material/Slide';
-
-const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
-
-function SlideTransition(props) {
-  return <Slide {...props} direction="up" />;
-}
-
-const SnackbarComponent = ({
-  snackbarOpen,
-  snackbarMessage,
-  snackbarSeverity = 'info',
-  autoHideDuration = 3000,
-  handleCloseSnackbar,
-  anchorOrigin = { vertical: 'top', horizontal: 'center' }
-}) => {
-  return (
-    <Snackbar
-      open={snackbarOpen}
-      autoHideDuration={autoHideDuration}
-      onClose={handleCloseSnackbar}
-      TransitionComponent={SlideTransition}
-      anchorOrigin={anchorOrigin}
-    >
-      <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
-        {snackbarMessage}
-      </Alert>
-    </Snackbar>
-  );
-};
-
-export default SnackbarComponent;
-
-
-
-
-// App.jsx or any other parent component
 import React, { useState } from 'react';
-import SnackbarComponent from './SnackbarComponent';
+import Drawer from '@mui/material/Drawer';
+import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import Tooltip from '@mui/material/Tooltip';
+import Collapse from '@mui/material/Collapse';
+import Divider from '@mui/material/Divider';
+import { Box, TextField } from '@mui/material';
+import { Link } from 'react-router-dom';
 
-function App() {
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+function Sidebar({ open, queues, queuesOpen }) {
+  const [searchInput, setSearchInput] = useState('');
 
-  const handleOpenSnackbar = (message, severity) => {
-    setSnackbarMessage(message);
-    setSnackbarSeverity(severity);
-    setSnackbarOpen(true);
+  const handleSearchChange = (event) => {
+    setSearchInput(event.target.value);
   };
 
-  const handleCloseSnackbar = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setSnackbarOpen(false);
-  };
+  const filteredQueues = queues?.filter((queue) =>
+    queue.name.toLowerCase().includes(searchInput.toLowerCase())
+  );
 
   return (
-    <div>
-      <button onClick={() => handleOpenSnackbar('This is a success message!', 'success')}>
-        Show Success Snackbar
-      </button>
-      <button onClick={() => handleOpenSnackbar('This is an error message!', 'error')}>
-        Show Error Snackbar
-      </button>
-      <SnackbarComponent
-        snackbarOpen={snackbarOpen}
-        snackbarMessage={snackbarMessage}
-        snackbarSeverity={snackbarSeverity}
-        handleCloseSnackbar={handleCloseSnackbar}
-      />
-    </div>
+    <Drawer
+      variant="permanent"
+      open={open}
+      id="drawer"
+      PaperProps={{
+        sx: {
+          height: "100%",
+          backgroundColor: "headerandSidebarColor",
+          display: "flex",
+          flexDirection: "column",
+        },
+      }}
+    >
+      <Toolbar variant="dense" />
+      <List sx={{ flexGrow: 1 }}>
+        <ListItem disablePadding sx={{ display: "block" }}>
+          <Tooltip title="Template" placement="right">
+            <ListItemButton>...</ListItemButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem disablePadding sx={{ display: "block" }}>
+          <Tooltip title="Outbox" placement="right">
+            <ListItemButton>...</ListItemButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem disablePadding sx={{ display: "block" }}>
+          <Tooltip title="Sent Items" placement="right">
+            <ListItemButton>...</ListItemButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem disablePadding sx={{ display: "block" }}>
+          <Tooltip title="Common Bin" placement="right">
+            <ListItemButton>...</ListItemButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem disablePadding sx={{ display: "block" }}>
+          <Tooltip title="Linked Queue" placement="right">
+            <ListItemButton>...</ListItemButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem disablePadding sx={{ display: "block" }}>
+          <Tooltip title={"Queues Count:" + (queues?.length || 0)} placement="right">
+            <ListItemButton>...</ListItemButton>
+          </Tooltip>
+        </ListItem>
+
+        {/* Search Input Field */}
+        <ListItem disablePadding sx={{ display: "block" }}>
+          <TextField
+            variant="outlined"
+            placeholder="Search Queues"
+            value={searchInput}
+            onChange={handleSearchChange}
+            fullWidth
+          />
+        </ListItem>
+
+        <Collapse in={queuesOpen} timeout="auto" unmountOnExit>
+          <Divider />
+          <List
+            sx={{
+              overflowY: "auto",
+              overflowX: "hidden",
+              flexGrow: 1,
+            }}
+            component={Box}
+            disablePadding
+          >
+            {filteredQueues && filteredQueues.map((value, index) => (
+              <ListItemButton
+                key={index}
+                component={Link}
+                to={`/queue/${value.id}`}
+                sx={{
+                  minHeight: 48,
+                  px: 2.5,
+                  ml: open && index !== 0 ? 2.6 : 'auto',
+                  backgroundColor: isActive(value.name) ? "sideBarClickColor" : "inherit",
+                  "&:hover": {
+                    backgroundColor: isActive(value.name) ? "sideBarClickColor" : "inherit",
+                  },
+                }}
+              >
+                {value.name}
+              </ListItemButton>
+            ))}
+          </List>
+        </Collapse>
+      </List>
+    </Drawer>
   );
 }
 
-export default App;
-
+export default Sidebar;
