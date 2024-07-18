@@ -1,31 +1,43 @@
-const [searchInput, setSearchInput] = useState('');
-  const [showSearchResults, setShowSearchResults] = useState(false);
+import React, { useRef, useEffect } from 'react';
+import { TextField, InputAdornment } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 
-  const searchFieldRef = useRef(null);
+interface SearchInputProps {
+  searchInput: string;
+  handleSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}
 
-  // Filtered queues based on search input
-  const filteredQueues = useMemo(() => {
-    if (!showSearchResults) return queues;  // Show all queues if search results are hidden
-    return queues?.filter((queue) =>
-      queue.name.toLowerCase().includes(searchInput.toLowerCase())
-    );
-  }, [queues, searchInput, showSearchResults]);
-
-  // Debounced function for handling search input change
-  const debouncedSearch = useCallback(
-    debounce((input) => {
-      setSearchInput(input);
-      setShowSearchResults(true);  // Show search results when input changes
-    }, 2000), // 2 seconds debounce delay
-    []
-  );
-
-  const handleSearchChange = (event) => {
-    debouncedSearch(event.target.value); // Use debounced function
-  };
+const SearchInput: React.FC<SearchInputProps> = ({ searchInput, handleSearchChange }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (searchFieldRef.current) {
-      searchFieldRef.current.focus();
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
-  }, []);
+  }, [searchInput]);
+
+  return (
+    <TextField
+      inputRef={inputRef}
+      variant="outlined"
+      placeholder="Search Queues"
+      value={searchInput}
+      onChange={handleSearchChange}
+      fullWidth
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon style={{ color: 'white', height: '20px' }} />
+          </InputAdornment>
+        ),
+      }}
+      sx={{
+        color: 'white',
+        height: '40px',
+        marginBottom: '10px',
+      }}
+    />
+  );
+};
+
+export default SearchInput;
