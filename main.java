@@ -1,48 +1,34 @@
-const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+import React from 'react';
+import { TextField, InputAdornment } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 
-  const handleDelete = (ruleid) => {
-    // Replace this with your delete logic
-    deleteRule(ruleid)
-      .then(response => {
-        setSnackbarMessage('Deleted successfully');
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
-      })
-      .catch(error => {
-        setSnackbarMessage('Failed to delete');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      });
-  };
+interface SearchInputProps {
+  searchInput: string;
+  handleSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}
 
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
-
-
-
-
-
-
-
-
-
-
-   </TableBody>
-      </Table>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-    </>
+const SearchInput: React.FC<SearchInputProps> = ({ searchInput, handleSearchChange }) => {
+  return (
+    <TextField
+      variant="outlined"
+      placeholder="Search Queues"
+      value={searchInput}
+      onChange={handleSearchChange}
+      fullWidth
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon style={{ color: 'white', height: '20px' }} />
+          </InputAdornment>
+        ),
+      }}
+      sx={{
+        color: 'white',
+        height: '40px',
+        marginBottom: '10px',
+      }}
+    />
   );
 };
 
-export default YourComponent;
+export default SearchInput;
