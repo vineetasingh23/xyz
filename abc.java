@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { IconButton, Tab, Tabs, Typography } from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
-import Box from "@mui/system/Box";
+import Box from "@mui/material/Box";
 import ViewRequestMain from "/screens/ViewRequestMain";
 import ReturnToTableButton from "/ReturnToTableButton";
 import CreateRequest from "/screens/CreateRequest";
@@ -82,9 +82,9 @@ const TabPanelForTable: React.FC<TabPanelForTableProps> = ({ page }) => {
   const ReqList = useSelector((state: RootState) => getState(state).tabs);
   const selectedTab = useSelector((state: RootState) => getState(state).selectedTab);
 
-  const handleTabChange = (event: React.SyntheticEvent, id: number) => {
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     const action = getChangeTab(page) as ActionCreatorWithPayload<any, any>;
-    dispatch(action({ id }));
+    dispatch(action({ id: newValue }));
   };
 
   const handleClose = useCallback(
@@ -97,16 +97,15 @@ const TabPanelForTable: React.FC<TabPanelForTableProps> = ({ page }) => {
     [dispatch, page]
   );
 
-  const handleRequestClick = (id: string) => {
-    const existingTab = ReqList.indexOf(id);
+  const handleRequestClick = (requestId: string) => {
+    const existingTab = ReqList.indexOf(requestId);
     if (existingTab !== -1) {
       // If the tab is already open, switch to it
-      const action = getChangeTab(page) as ActionCreatorWithPayload<any, any>;
-      dispatch(action({ id: existingTab }));
+      handleTabChange(null, existingTab);
     } else {
       // Otherwise, open a new tab
       const action = getChangeTab(page) as ActionCreatorWithPayload<any, any>;
-      dispatch(action({ id }));
+      dispatch(action({ id: ReqList.length }));
     }
   };
 
