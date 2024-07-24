@@ -1,43 +1,188 @@
-import React, { useRef, useEffect } from 'react';
-import { TextField, InputAdornment } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import React, { useCallback } from "react";
+import { IconButton, Tab, Tabs, Typography } from "@mui/material";
+import CancelIcon from "@mui/icons-material/Cancel";
+import Box from "@mui/system/Box";
+import ViewRequestMain from "/screens/ViewRequestMain";
+import ReturnToTableButton from "/ReturnToTableButton";
+import CreateRequest from "/screens/CreateRequest";
+import NewMemo from "/screens/NewMemo";
+import CreateTemplate from "/screens/CreateTemplate";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "/reduxState/store/store";
+import { getChangeTab, getRemoveTab, TabState } from "/reduxState/reducers/StateSlices";
+import { ActionCreatorWithPayload } from "@reduxjs/toolkit";
+import SubjectIdSearch from "./screens/SubjectIdSearchResults";
 
-interface SearchInputProps {
-  searchInput: string;
-  handleSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
 }
 
-const SearchInput: React.FC<SearchInputProps> = ({ searchInput, handleSearchChange }) => {
-  const inputRef = useRef<HTMLInputElement>(null);
+function CustomTabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}
 
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
+function allyProps(index: number) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+}
+
+interface TabPanelForTableProps {
+  page: string;
+}
+
+const TabPanelForTable: React.FC<TabPanelForTableProps> = ({ page }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const showCorrespondence = true;
+  const showComment = true;
+  const showCycleTime = true;
+  const showHistory = true;
+  const showLinkedRequest = true;
+  const showProcessForm = true;
+
+  const getState = (state: RootState): TabState => {
+    switch (page) {
+      case "queue":
+        return state.QueueReducer;
+      case "linkedqueue":
+        return state.LinkedQueueReducer;
+      case "outbox":
+        return state.OutboxReducer;
+      case "sentitems":
+        return state.SentItemReducer;
+      case "template":
+        return state.TemplateReducer;
+      case "commonbin":
+        return state.CommonbinReducer;
+      case "search":
+        return state.SearchReducer;
+      default:
+        return state.QueueReducer;
     }
-  }, [searchInput]);
+  };
+
+  const ReqList = useSelector((state: RootState) => getState(state).tabs);
+  const selectedTab = useSelector((state: RootState) => getState(state).selectedTab);
+
+  const handleTabChange = (event: React.SyntheticEvent, id: number) => {
+    const action = getChangeTab(page) as ActionCreatorWithPayload<any, any>;
+    dispatch(action({ id }));
+  };
+
+  const handleClose = useCallback(
+    (event: React.MouseEvent, tabToDelete: number) => {
+      event.stopPropagation();
+      event.preventDefault();
+      const action = getRemoveTab(page) as ActionCreatorWithPayload<any, any>;
+      dispatch(action({ id: tabToDelete }));
+    },
+    [dispatch, page]
+  );
+
+  const handleRequestClick = (id: string) => {
+    const existingTab = ReqList.indexOf(id);
+    if (existingTab !== -1) {
+      // If the tab is already open, switch to it
+      const action = getChangeTab(page) as ActionCreatorWithPayload<any, any>;
+      dispatch(action({ id: existingTab }));
+    } else {
+      // Otherwise, open a new tab
+      const action = getChangeTab(page) as ActionCreatorWithPayload<any, any>;
+      dispatch(action({ id }));
+    }
+  };
 
   return (
-    <TextField
-      inputRef={inputRef}
-      variant="outlined"
-      placeholder="Search Queues"
-      value={searchInput}
-      onChange={handleSearchChange}
-      fullWidth
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <SearchIcon style={{ color: 'white', height: '20px' }} />
-          </InputAdornment>
-        ),
-      }}
-      sx={{
-        color: 'white',
-        height: '40px',
-        marginBottom: '10px',
-      }}
-    />
+    <Box sx={{ width: "100%" }}>
+      <Box display="flex">
+        <ReturnToTableButton />
+        <Tabs
+          value={selectedTab}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          {ReqList.map((id, key) => (
+            <Tab
+              key={key}
+              {...allyProps(key)}
+              sx={{
+                mt: 1.5,
+                backgroundColor: "fieldblue",
+                borderTopLeftRadius: 8,
+                borderTopRightRadius: 8,
+                border: "1px solid rgb(0 0 0 / 0.03)",
+                color: "fontColor",
+                "&:hover": {
+                  backgroundColor: "fieldblueHover",
+                  opacity: 0.9,
+                },
+              }}
+              label={
+                <span>
+                  {id}
+                  <IconButton
+                    sx={{
+                      height: "0.5px",
+                      width: "0.5px",
+                      ml: 1,
+                      mt: -1,
+                      color: "red",
+                    }}
+                    component="span"
+                    onClick={(event) => handleClose(event, key)}
+                  >
+                    <CancelIcon />
+                  </IconButton>
+                </span>
+              }
+              onClick={() => handleRequestClick(id)}
+            />
+          ))}
+        </Tabs>
+      </Box>
+      {selectedTab !== -1 && (
+        <CustomTabPanel value={selectedTab} index={selectedTab}>
+          {ReqList[selectedTab] === "New Request" && <CreateRequest />}
+          {ReqList[selectedTab] === "New Memo" && <NewMemo />}
+          {ReqList[selectedTab] === "New Template" && <CreateTemplate />}
+          {ReqList[selectedTab].startsWith("EMS") && (
+            <SubjectIdSearch searchString={ReqList[selectedTab]} />
+          )}
+          {!["New Request", "New Memo", "New Template"].includes(ReqList[selectedTab]) &&
+            !ReqList[selectedTab].startsWith("EMS") && (
+              <ViewRequestMain
+                requestId={ReqList[selectedTab]}
+                showCorrespondence={showCorrespondence}
+                showComment={showComment}
+                showCycleTime={showCycleTime}
+                showHistory={showHistory}
+                showLinkedRequest={showLinkedRequest}
+                showProcessForm={showProcessForm}
+              />
+            )}
+        </CustomTabPanel>
+      )}
+    </Box>
   );
 };
 
-export default SearchInput;
+export default TabPanelForTable;
