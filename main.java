@@ -1,128 +1,26 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Box, ListItem, Tooltip, Collapse, Toolbar, List } from '@mui/material';
-import { useLocation } from 'react-router-dom';
-import { styled } from '@mui/material/styles';
-import MuiDrawer from '@mui/material/Drawer';
-import SearchInput from './SearchInput';  // Import the new SearchInput component
-
-interface DrawerProps {
-  open: boolean;
-}
-
-const SideBar: React.FC<DrawerProps> = ({ open }) => {
-  const [drawerWidth, setDrawerWidth] = useState<number>(260);
-  const minDrawerWidth = 260;
-  const maxDrawerWidth = 500;
-  const [queuesOpen, setQueuesOpen] = useState(true);
-  const temp = useLocation().pathname.split('/');
-  const currentPath = decodeURI(temp[temp.length - 1]);
-  const [queues, setQueues] = useState([]);
-  const [searchInput, setSearchInput] = useState('');
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(event.target.value);
-  };
-
-  const filteredQueues = useMemo(() => {
-    return queues?.filter(queue => queue.name.toLowerCase().includes(searchInput.toLowerCase()));
-  }, [queues, searchInput]);
-
-  const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, queueName: string) => {
-    event.preventDefault();
-    console.log(queueName);
-  };
+  useEffect(() => {
+    // Restore the scroll position after the component updates
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollPositionRef.current;
+    }
+  });
 
   const handleScroll = () => {
     if (scrollContainerRef.current) {
-      setScrollPosition(scrollContainerRef.current.scrollTop);
+      scrollPositionRef.current = scrollContainerRef.current.scrollTop;
     }
   };
 
-  useEffect(() => {
+
+  const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, queueName: string) => {
+    event.preventDefault();
+    // Save the scroll position before the state update
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollPosition;
+      scrollPositionRef.current = scrollContainerRef.current.scrollTop;
     }
-  }, [scrollPosition, filteredQueues]);
+    console.log(queueName);
+  };
 
-  return (
-    <Box sx={{ display: 'flex' }}>
-      <Drawer
-        variant="permanent"
-        open={open}
-        PaperProps={{
-          sx: {
-            width: open ? drawerWidth : minDrawerWidth,
-            transition: 'width 0.3s',
-          }
-        }}
-      >
-        <Toolbar variant="dense" />
-        <List>
-          <ListItem disablePadding sx={{ display: 'block' }}>
-            <Tooltip title="Template" placement="right">
-              {/* Tooltip Content */}
-            </Tooltip>
-            <Tooltip title="Outbox" placement="right">
-              {/* Tooltip Content */}
-            </Tooltip>
-            <Tooltip title="Sent Items" placement="right">
-              {/* Tooltip Content */}
-            </Tooltip>
-            <Tooltip title="Common Bin" placement="right">
-              {/* Tooltip Content */}
-            </Tooltip>
-            <Tooltip title="Linked Queue" placement="right">
-              {/* Tooltip Content */}
-            </Tooltip>
-            {open && queuesOpen && queues?.length > 10 && (
-              <ListItem disablePadding sx={{ display: 'flex', justifyContent: 'center' }}>
-                <SearchInput searchInput={searchInput} handleSearchChange={handleSearchChange} />
-              </ListItem>
-            )}
-          </ListItem>
-        </List>
-        <Collapse in={queuesOpen}>
-          <Box
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            sx={{
-              height: '55vh',
-              marginRight: '0px',
-              overflowY: open ? 'auto' : 'hidden',
-              overflowX: 'hidden',
-              '&::-webkit-scrollbar': {
-                width: '14px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: '#f1f1f1',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: '#888',
-              },
-              '&::-webkit-scrollbar-thumb:hover': {
-                background: '#555',
-              },
-            }}
-          >
-            {filteredQueues.map(queue => (
-              <ListItem
-                key={queue.id}
-                disablePadding
-                sx={{ display: 'block' }}
-                onClick={(event) => handleClick(event, queue.name)}
-              >
-                <Tooltip title={queue.name} placement="right">
-                  <Box>{queue.name}</Box>
-                </Tooltip>
-              </ListItem>
-            ))}
-          </Box>
-        </Collapse>
-      </Drawer>
-    </Box>
-  );
-};
 
-export default SideBar;
+ const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef<number>(0);
