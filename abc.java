@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import React, { useState } from "react";
-import { Box, Button, MenuItem, Select, Switch, TextField } from "@mui/material";
+import { Box, Button, MenuItem, Select, Switch, TextField, Grid } from "@mui/material";
 import BasicDateTimePicker from "../BasicDateTimePicker";
 import processFormConfig from "../assets/mockdata/processFormConfig.json";
 
@@ -64,28 +64,31 @@ function ViewProcessForms({ acceptRequest, display }: { acceptRequest?: boolean;
     <Box sx={{ display: display ? "block" : "none" }}>
       {acceptRequest && (
         <Box sx={{ p: 2 }}>
-          {processFormConfig.items.map(item => (
-            <Box key={item.fieldName} sx={{ mb: 2 }}>
-              <label>{item.fieldName}</label>
-              {renderField(item)}
-            </Box>
-          ))}
+          <Grid container spacing={2}>
+            {processFormConfig.items.map(item => (
+              <Grid item xs={12} sm={6} md={4} key={item.fieldName}>
+                <label>{item.fieldName}</label>
+                {renderField(item)}
+              </Grid>
+            ))}
+          </Grid>
 
-          <Button
-            variant="contained"
-            sx={{
-              mt: 2,
-              backgroundColor: "darkBlue",
-              color: "white",
-              "&:hover": {
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Button
+              variant="contained"
+              sx={{
                 backgroundColor: "darkBlue",
                 color: "white",
-                fontWeight: "bold",
-              },
-            }}
-          >
-            <span>SAVE</span>
-          </Button>
+                "&:hover": {
+                  backgroundColor: "darkBlue",
+                  color: "white",
+                  fontWeight: "bold",
+                },
+              }}
+            >
+              <span>SAVE</span>
+            </Button>
+          </Box>
         </Box>
       )}
     </Box>
