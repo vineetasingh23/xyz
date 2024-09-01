@@ -60,18 +60,35 @@ function ViewProcessForms({ acceptRequest, display }: { acceptRequest?: boolean;
     }
   };
 
+  const chunkArray = (arr: any[], chunkSize: number) => {
+    const results = [];
+    for (let i = 0; i < arr.length; i += chunkSize) {
+      results.push(arr.slice(i, i + chunkSize));
+    }
+    return results;
+  };
+
+  const gridItems = chunkArray(processFormConfig.items, 3);
+
   return (
     <Box sx={{ display: display ? "block" : "none" }}>
       {acceptRequest && (
         <Box sx={{ p: 2 }}>
-          <Grid container spacing={2}>
-            {processFormConfig.items.map(item => (
-              <Grid item xs={12} sm={6} md={4} key={item.fieldName}>
-                <label>{item.fieldName}</label>
-                {renderField(item)}
-              </Grid>
-            ))}
-          </Grid>
+          {gridItems.map((row, index) => (
+            <Grid
+              container
+              spacing={2}
+              key={index}
+              justifyContent={row.length < 3 ? 'center' : 'flex-start'}
+            >
+              {row.map(item => (
+                <Grid item xs={12} sm={6} md={4} key={item.fieldName}>
+                  <label>{item.fieldName}</label>
+                  {renderField(item)}
+                </Grid>
+              ))}
+            </Grid>
+          ))}
 
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <Button
