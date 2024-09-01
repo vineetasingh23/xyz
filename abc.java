@@ -113,3 +113,35 @@ function ViewProcessForms({ acceptRequest, display }: { acceptRequest?: boolean;
 }
 
 export default ViewProcessForms;
+
+
+
+
+<FormControl fullWidth sx={{ width: "310px", height: "40px" }}>
+          <InputLabel
+            id={`${item.fieldName}-input-select-label`}
+            sx={{
+              color: `${theme.palette.mode === "light" ? "black" : "white"}!important`,
+            }}
+          >
+            {item.fieldName}
+          </InputLabel>
+          <StyledSelect
+            labelId={`${item.fieldName}-input-select-label`}
+            id={`${item.fieldName}-select`}
+            value={formState[item.fieldName]}
+            label={item.fieldName}
+            onChange={(e) => handleFieldChange(item.fieldName, e.target.value)}
+            sx={{ width: "310px", height: "40px" }}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {item.optionsList && item.optionsList.map((option: string, index: number) => (
+              <MenuItem key={index} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </StyledSelect>
+        </FormControl>
+      );
