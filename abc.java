@@ -1,4 +1,4 @@
- case "dropdown":
+case "dropdown":
       return (
         <FormControl fullWidth>
           <InputLabel
@@ -15,12 +15,12 @@
           <StyledSelect
             labelId={`${item.fieldName}-input-select-label`}
             id={`${item.fieldName}-select`}
-            value={formState[item.fieldName] || "select"}  {/* Default to "select" */}
+            value={formState[item.fieldName] || "select"}  // Default to "select"
             label={item.fieldName}
             onChange={(e) => handleFieldChange(item.fieldName, e.target.value)}
             sx={{ width: "310px", height: "40px" }}
           >
-            <MenuItem value="select">
+            <MenuItem value="select" disabled>
               <em>select</em>
             </MenuItem>
             {item.optionsList &&
