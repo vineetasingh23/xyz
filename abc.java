@@ -1,63 +1,23 @@
- return (
-        <FormControl fullWidth>
-          <InputLabel
-            id={`${item.fieldName}-input-select-label`}
-            sx={{
-              color:
-                (useTheme().palette.mode === "light"
-                  ? lightTheme.black
-                  : darkTheme.white) + " !important",
-            }}
-          >
-            {item.fieldName}
-          </InputLabel>
-          <StyledSelect
-            labelId={`${item.fieldName}-input-select-label`}
-            id={`${item.fieldName}-select`}
-            value={formState[item.fieldName] || ""}
-            label={item.fieldName}
-            onChange={(e) => handleFieldChange(item.fieldName, e.target.value)}
-            displayEmpty
-            sx={{ width: "310px", height: "40px" }}
-          >
-            <MenuItem value="" disabled>
-              <em>select</em>
-            </MenuItem>
-            {item.optionsList &&
-              item.optionsList.map((option, index) => (
-                <MenuItem key={index} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-          </StyledSelect>
-        </FormControl>
-      );
+import { styled, TextField } from '@mui/material';
+import React from 'react';
+import { lightTheme, darkTheme } from '/theme';
 
-
-
-
-return (
-    <FormControl fullWidth>
-      <InputLabel
-        id={`${item.fieldName}-text-field-label`}
-        sx={{
-          color:
-            (useTheme().palette.mode === "light"
-              ? lightTheme.black
-              : darkTheme.white) + " !important",
-        }}
-        shrink={true}  // Ensures the label stays above the text field
-      >
-        {item.fieldName}
-      </InputLabel>
-      <StyledTextField
-        id={`${item.fieldName}-text-field`}
-        value={formState[item.fieldName]}
-        label={item.fieldName}
-        onChange={(e) =>
-          handleFieldChange(item.fieldName, e.target.value)
-        }
-        fullWidth
-      />
-    </FormControl>
-  );
+export const StyledTextField = styled(TextField)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    width: '310px',
+    borderRadius: '10px',
+    justifyContent: 'center',
+    color: theme.palette.mode === 'light' ? lightTheme.fontColor : darkTheme.fontColor, // Ensuring text color is visible
+    '& fieldset': {
+      border: `1px solid`,
+      borderColor: theme.palette.mode === 'light' ? lightTheme.primaryColor : darkTheme.primaryColor,
+      backgroundColor: theme.palette.mode === 'light' ? lightTheme.white : 'transparent',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: theme.palette.mode === 'light' ? lightTheme.fontColor : darkTheme.white, // Ensuring label color is visible
+  },
+  '& .MuiOutlinedInput-input': {
+    color: theme.palette.mode === 'light' ? 'black' : 'white', // Text color based on theme mode
+  },
+}));
