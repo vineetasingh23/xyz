@@ -1,44 +1,50 @@
-import dayjs from "dayjs";
-import React, { useState } from "react";
-import { Box, Button, MenuItem, Select, Switch, TextField, Grid } from "@mui/material";
-import BasicDateTimePicker from "../BasicDateTimePicker";
-import processFormConfig from "../assets/mockdata/processFormConfig.json";
+import React, { useState } from 'react';
+import { Grid, Box, Button, FormControl, InputLabel, MenuItem, Select, Switch } from "@mui/material";
+import StyledSelect from "../path/to/your/StyledSelect"; // Update the import path to your custom StyledSelect
+import StyledTextField from "../path/to/your/StyledTextField"; // Update the import path to your custom StyledTextField
+import BasicDateTimePicker from "../path/to/your/BasicDateTimePicker"; // Update the import path to your custom BasicDateTimePicker
+import processFormConfig from "../path/to/your/processFormConfig.json"; // Update the import path to your processFormConfig
 
-function ViewProcessForms({ acceptRequest, display }: { acceptRequest?: boolean; display: boolean; }) {
-  const [formState, setFormState] = useState(() => {
-    const initialState: any = {};
-    processFormConfig.items.forEach(item => {
-      initialState[item.fieldName] = item.fieldType === "dropdown" ? "" : false;
-    });
-    return initialState;
-  });
+const initialState = processFormConfig.items.reduce((state, item) => {
+  state[item.fieldName] = item.fieldType === "dropdown" ? "" : "";
+  return state;
+}, {});
 
-  const handleFieldChange = (fieldName: string, value: any) => {
+const ViewProcessForms = ({ acceptRequest, requestId, display }) => {
+  const [formState, setFormState] = useState(initialState);
+
+  const handleFieldChange = (fieldName, value) => {
     setFormState(prevState => ({ ...prevState, [fieldName]: value }));
   };
 
-  const renderField = (item: any) => {
+  const renderField = (item) => {
     switch (item.fieldType) {
       case "dropdown":
         return (
-          <Select
-            value={formState[item.fieldName]}
-            onChange={(e) => handleFieldChange(item.fieldName, e.target.value)}
-            fullWidth
-          >
-            {item.optionsList.map((option: string) => (
-              <MenuItem key={option} value={option}>
-                {option}
+          <FormControl fullWidth>
+            <StyledSelect
+              id={`${item.fieldName}-select`}
+              value={formState[item.fieldName]}
+              onChange={(e) => handleFieldChange(item.fieldName, e.target.value)}
+              sx={{ width: "310px", height: "40px" }}
+            >
+              <MenuItem value="">
+                <em>None</em>
               </MenuItem>
-            ))}
-          </Select>
+              {item.optionsList && item.optionsList.map((option, index) => (
+                <MenuItem key={index} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </StyledSelect>
+          </FormControl>
         );
       case "textField":
         return (
-          <TextField
+          <StyledTextField
             value={formState[item.fieldName]}
             onChange={(e) => handleFieldChange(item.fieldName, e.target.value)}
-            fullWidth
+            defaultValue=""
           />
         );
       case "switch":
@@ -51,7 +57,7 @@ function ViewProcessForms({ acceptRequest, display }: { acceptRequest?: boolean;
       case "dateField":
         return (
           <BasicDateTimePicker
-            value={formState[item.fieldName] || dayjs()}
+            value={formState[item.fieldName]}
             onChange={(date) => handleFieldChange(item.fieldName, date)}
           />
         );
@@ -60,7 +66,7 @@ function ViewProcessForms({ acceptRequest, display }: { acceptRequest?: boolean;
     }
   };
 
-  const chunkArray = (arr: any[], chunkSize: number) => {
+  const chunkArray = (arr, chunkSize) => {
     const results = [];
     for (let i = 0; i < arr.length; i += chunkSize) {
       results.push(arr.slice(i, i + chunkSize));
@@ -80,17 +86,17 @@ function ViewProcessForms({ acceptRequest, display }: { acceptRequest?: boolean;
               spacing={2}
               key={index}
               justifyContent={row.length < 3 ? 'center' : 'flex-start'}
+              sx={{ mb: 5 }}
             >
               {row.map(item => (
                 <Grid item xs={12} sm={6} md={4} key={item.fieldName}>
-                  <label>{item.fieldName}</label>
+                  {item.fieldType === "switch" && <label>{item.fieldName}</label>}
                   {renderField(item)}
                 </Grid>
               ))}
             </Grid>
           ))}
-
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
             <Button
               variant="contained"
               sx={{
@@ -110,38 +116,6 @@ function ViewProcessForms({ acceptRequest, display }: { acceptRequest?: boolean;
       )}
     </Box>
   );
-}
+};
 
 export default ViewProcessForms;
-
-
-
-
-<FormControl fullWidth sx={{ width: "310px", height: "40px" }}>
-          <InputLabel
-            id={`${item.fieldName}-input-select-label`}
-            sx={{
-              color: `${theme.palette.mode === "light" ? "black" : "white"}!important`,
-            }}
-          >
-            {item.fieldName}
-          </InputLabel>
-          <StyledSelect
-            labelId={`${item.fieldName}-input-select-label`}
-            id={`${item.fieldName}-select`}
-            value={formState[item.fieldName]}
-            label={item.fieldName}
-            onChange={(e) => handleFieldChange(item.fieldName, e.target.value)}
-            sx={{ width: "310px", height: "40px" }}
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            {item.optionsList && item.optionsList.map((option: string, index: number) => (
-              <MenuItem key={index} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </StyledSelect>
-        </FormControl>
-      );
