@@ -1,46 +1,38 @@
-const handleSave = async () => {
-  const payload = processForm.items.reduce((acc, item) => {
-    acc[item.emailMgmtMapping] = formState[item.fieldName];
-    return acc;
-  }, {});
+describe('BatchProcessing Method Tests', () => {
+  let component;
 
-  try {
-    const url = `${ApiEndPoints.ROOT}${ApiEndPoints.REQUEST}/${ApiEndPoints.PROCESS_FORM}`;
-    const axiosConfig: AxiosRequestConfig = {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-        "ct-remote-user": userDetails.emailId,
-      },
-    };
+  beforeEach(() => {
+    component = render(<MockBatchProcessing />);
+  });
 
-    const response: AxiosResponse = await ApiConfig.put(url, payload, axiosConfig);
-    setSnackbarMessage("Process form saved successfully!");
-    setSnackbarSeverity("success");
-    setSnackbarOpen(true);
-  } catch (error) {
-    setSnackbarMessage("Error saving Process Forms");
-    setSnackbarSeverity("error");
-    setSnackbarOpen(true);
-  }
-};
+  it('should update tenantId state on calling setTenantId', () => {
+    const instance = component.container.querySelector('BatchProcessing');
+    instance.setTenantId('NewTenant123');
+    expect(instance.state.tenantId).toBe('NewTenant123');
+  });
 
+  it('should update tabValue state on calling setTabValue', () => {
+    const instance = component.container.querySelector('BatchProcessing');
+    instance.setTabValue('2');
+    expect(instance.state.tabValue).toBe('2');
+  });
 
+  it('should update batchId state on calling setBatchId', () => {
+    const instance = component.container.querySelector('BatchProcessing');
+    instance.setBatchId('Batch123');
+    expect(instance.state.batchId).toBe('Batch123');
+  });
 
-Download the Ingestion Controller Endpoints Collection:
-Obtain the Ingestion Controller Endpoints Collection file and save it to your local system.
-Import the Collection into Postman:
-Open Postman and utilize the Import functionality to upload the downloaded collection file.
-Download CA 13 Certificates:
-Follow the detailed instructions provided in the TEST CA 13 Certificate Installation document on Confluence to download the CA 13 certificates.
-Configure CA Certificates in Postman:
-Navigate to the Settings section in Postman.
-Enable the CA Certificates option.
-Add the Group Root TEST CA13 certificate.
-Test the APIs:
-You are now ready to test the APIs using the configured settings.
+  it('should call handleChange and update tabValue state', () => {
+    const instance = component.container.querySelector('BatchProcessing');
+    const event = { preventDefault: jest.fn() }; // Mock event
+    instance.handleChange(event, '3');
+    expect(instance.state.tabValue).toBe('3');
+  });
 
-
-
-
-
+  it('should update loggingLoader state on calling setLoggingLoader', () => {
+    const instance = component.container.querySelector('BatchProcessing');
+    instance.setLoggingLoader(true);
+    expect(instance.state.loggingLoader).toBe(true);
+  });
+});
