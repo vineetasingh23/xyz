@@ -2,40 +2,74 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import ConfidenceTimeGraph from '../../components/ConfidenceTimeGraph';
 import { CommonConstants } from '../../common/CommonConstants';
-import { Colors } from '../../common/constants/ColorConstants';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+
+// Mock data
+const mockData = [
+  { timeStamp: '2023-01-01', value: 0.8 },
+  { timeStamp: '2023-02-01', value: 0.7 },
+  { timeStamp: '2023-03-01', value: 0.9 },
+];
+
+const mockVersionList = [
+  { versionName: 'Version 1' },
+  { versionName: 'Version 2' },
+];
 
 describe('ConfidenceTimeGraph Component', () => {
-  const mockData = [
-    { date: '2023-01-01', value: 10 },
-    { date: '2023-02-01', value: 20 },
-    { date: '2023-03-01', value: 30 },
-  ];
-
-  const mockVersionList = ['1.0', '1.1', '1.2'];
-
-  it('renders without crashing', () => {
+  test('renders without crashing', () => {
     render(<ConfidenceTimeGraph data={mockData} versionList={mockVersionList} />);
-    expect(screen.getByTestId('confidence-time-graph')).toBeInTheDocument();
+    expect(screen.getByText(/No Data Available/i)).toBeInTheDocument();
   });
 
-  it('initializes `data` state with empty array', () => {
-    const { result } = render(<ConfidenceTimeGraph data={[]} versionList={[]} />);
-    expect(result.current.data).toEqual([]);
-  });
-
-  it('updates `data` state when `props.data` changes', () => {
-    const { rerender } = render(<ConfidenceTimeGraph data={[]} versionList={[]} />);
-    rerender(<ConfidenceTimeGraph data={mockData} versionList={mockVersionList} />);
-    expect(screen.getByTestId('confidence-time-graph')).toBeInTheDocument();
-  });
-
-  it('formats X-axis labels correctly with CustomXAxisTick', () => {
+  test('displays the correct graph when data is provided', () => {
     render(<ConfidenceTimeGraph data={mockData} versionList={mockVersionList} />);
     
-    const xAxisTickLabels = screen.getAllByTestId('x-axis-tick');
-    expect(xAxisTickLabels[0].textContent).toBe('Jan 2023');
-    expect(xAxisTickLabels[1].textContent).toBe('Feb 2023');
-    expect(xAxisTickLabels[2].textContent).toBe('Mar 2023');
+    // Check if graph elements are rendered
+    const yAxisLabel = screen.getByText(CommonConstants.LINE_CHART_Y_AXIS_LABEL);
+    const xAxisLabel = screen.getByText('Month');
+    expect(yAxisLabel).toBeInTheDocument();
+    expect(xAxisLabel).toBeInTheDocument();
+  });
+
+  test('updates data when props change', () => {
+    const { rerender } = render(<ConfidenceTimeGraph data={[]} versionList={mockVersionList} />);
+    
+    // Check for initial state (no data available text)
+    expect(screen.getByText(/No Data Available/i)).toBeInTheDocument();
+    
+    // Rerender with new data
+    rerender(<ConfidenceTimeGraph data={mockData} versionList={mockVersionList} />);
+    
+    // Verify that the graph updated (no longer showing "No Data Available")
+    expect(screen.queryByText(/No Data Available/i)).not.toBeInTheDocument();
+  });
+
+  test('CustomXAxisTick displays correct date format', () => {
+    render(<ConfidenceTimeGraph data={mockData} versionList={mockVersionList} />);
+    
+    // Look for custom formatted dates
+    const formattedDates = mockData.map((dataPoint) => {
+      const date = new Date(dataPoint.timeStamp);
+      return date.toLocaleString('en-us', { month: 'short', year: 'numeric' });
+    });
+
+    formattedDates.forEach((dateText) => {
+      expect(screen.getByText(dateText)).toBeInTheDocument();
+    });
+  });
+
+  test('renders a Line for each version in versionList', () => {
+    render(<ConfidenceTimeGraph data={mockData} versionList={mockVersionList} />);
+    
+    const lines = screen.getAllByRole('img', { hidden: true }); // Assuming that the lines are SVG paths with role 'img'
+    expect(lines.length).toBe(mockVersionList.length);
+  });
+
+  test('displays legend items correctly', () => {
+    render(<ConfidenceTimeGraph data={mockData} versionList={mockVersionList} />);
+    
+    mockVersionList.forEach((version) => {
+      expect(screen.getByText(version.versionName)).toBeInTheDocument();
+    });
   });
 });
