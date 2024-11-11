@@ -1,151 +1,138 @@
 import React from 'react';
-import { fireEvent, screen, render, waitFor } from '@testing-library/react';
-import MyDocSplitters from '../../pages/my-doc-splitters';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import PermanentDrawerLeftWorkflow from './PermanentDrawerLeftWorkflow';
+import * as api from './api'; // Mock this file for API calls
 import { SnackbarProvider } from 'notistack';
-import MockAdapter from 'axios-mock-adapter';
-import axios from 'axios';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
-let mock = new MockAdapter(axios);
+jest.mock('./api', () => ({
+  fetchProcessors: jest.fn(),
+  fetchVersions: jest.fn(),
+}));
 
-const MockMyDocSplitters = () => {
-  return (
-    <SnackbarProvider maxSnack={5} autoHideDuration={3000} preventDuplicate>
-      <Router>
-        <MyDocSplitters />
-      </Router>
+const theme = createTheme();
+const MockComponent = (props: any) => (
+  <ThemeProvider theme={theme}>
+    <SnackbarProvider>
+      <PermanentDrawerLeftWorkflow {...props} />
     </SnackbarProvider>
-  );
-};
+  </ThemeProvider>
+);
 
-describe('MyDocSplitters Component Tests', () => {
+describe('PermanentDrawerLeftWorkflow', () => {
+  const mockProps = {
+    drawerFlag: true,
+    nodeProperties: { displayName: 'Processor A', processorId: '123', versionId: 'v1' },
+    nodeTypeOfSelectedNode: 'Document',
+    handleNodeProperties: jest.fn(),
+    handleDrawerFlag: jest.fn(),
+  };
+
   beforeEach(() => {
-    mock.reset();
+    jest.clearAllMocks();
   });
 
-  it('sets tenantId state correctly when setTenantId is called', () => {
-    render(<MockMyDocSplitters />);
-    
-    // Find and interact with the component that triggers state change
-    const instance = screen.getByLabelText('Tenant ID Input'); // Assuming there's an input field for tenantId
-    fireEvent.change(instance, { target: { value: 'tenant123' } });
-    
-    // Check that the component updated correctly
-    expect(instance.value).toBe('tenant123');
-  });
-
-  it('sets tenantId and searchState states when onSearchHandler is called', () => {
-    render(<MockMyDocSplitters />);
-    
-    const searchField = screen.getByLabelText('Search Field');
-    fireEvent.change(searchField, { target: { value: 'tenant123' } });
-    
-    // Now simulate the search button click
-    const searchButton = screen.getByText('Search');
-    fireEvent.click(searchButton);
-    
-    // Verify that tenantId and searchState are updated
-    const tenantIdInput = screen.getByLabelText('Tenant ID Input');
-    expect(tenantIdInput.value).toBe('tenant123');
-    
-    // Search state should be updated as well
-    const searchState = screen.getByTestId('search-state'); // Assuming you have a visible element with data-testid="search-state"
-    expect(searchState.textContent).toBe('true');
-  });
-
-  it('sets searchState state correctly when setSearchState is called', () => {
-    render(<MockMyDocSplitters />);
-    
-    // Simulate a method that updates searchState
-    const searchButton = screen.getByText('Search');
-    fireEvent.click(searchButton);
-    
-    // Verify if searchState is updated correctly
-    const searchState = screen.getByTestId('search-state'); // Assuming this element reflects the state
-    expect(searchState.textContent).toBe('true');
-  });
-
-  it('sets confirmationDialog state correctly when handleDeleteDialogOpen is called', () => {
-    render(<MockMyDocSplitters />);
-    
-    // Open delete confirmation dialog
-    const deleteButton = screen.getByText('Delete Processor'); // Assuming button text
-    fireEvent.click(deleteButton);
-    
-    // Confirm that the dialog opens
-    const dialog = screen.getByText('Are you sure you want to delete this processor?'); // Assuming dialog title
-    expect(dialog).toBeInTheDocument();
-  });
-
-  it('sets confirmationDialog state correctly when handleDeleteDialogClose is called', () => {
-    render(<MockMyDocSplitters />);
-    
-    // Open and close the confirmation dialog
-    const deleteButton = screen.getByText('Delete Processor');
-    fireEvent.click(deleteButton);
-    
-    const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
-    
-    // Confirm dialog is closed
-    const dialog = screen.queryByText('Are you sure you want to delete this processor?');
-    expect(dialog).not.toBeInTheDocument();
-  });
-
-  it('sets processorIdToDelete state correctly when onClickDelete is called', () => {
-    render(<MockMyDocSplitters />);
-    
-    // Trigger the delete handler
-    const deleteButton = screen.getByText('Delete Processor');
-    fireEvent.click(deleteButton);
-    
-    // Confirm that the processorIdToDelete state has been set
-    const processorId = screen.getByTestId('processor-id'); // Assuming element with processor id is displayed
-    expect(processorId.textContent).toBe('processor123');
-  });
-
-  it('toggles refresh state when refresh method is called', () => {
-    render(<MockMyDocSplitters />);
-    
-    // Simulate a state change that toggles refresh
-    const refreshButton = screen.getByText('Refresh'); // Assuming button triggers refresh
-    fireEvent.click(refreshButton);
-    
-    // Verify that refresh state toggled
-    const refreshState = screen.getByTestId('refresh-state');
-    expect(refreshState.textContent).toBe('true');
-    
-    fireEvent.click(refreshButton);
-    expect(refreshState.textContent).toBe('false');
-  });
-
-  it('sets textFieldState correctly when updating textFieldState', () => {
-    render(<MockMyDocSplitters />);
-    
-    // Simulate text field update
-    const textField = screen.getByLabelText('Text Field');
-    fireEvent.change(textField, { target: { value: 'new text' } });
-    
-    // Check if the state change is reflected in the component
-    expect(textField.value).toBe('new text');
-  });
-
-  it('calls splitterToDelete and updates state on delete button click', async () => {
-    render(<MockMyDocSplitters />);
-    
-    const instance = screen.getByLabelText('Delete Processor');
-    
-    // Mocking successful delete API call
-    mock.onDelete('/textract/documentSplitter/deleteProcessor').reply(200);
-    
-    // Trigger the deletion
-    const deleteButton = screen.getByText('Delete');
-    fireEvent.click(deleteButton);
-    
-    await waitFor(() => {
-      // Confirm that state was updated (for example, a refresh was triggered)
-      const refreshState = screen.getByTestId('refresh-state');
-      expect(refreshState.textContent).toBe('true');
+  test('should fetch processors list on mount when drawerFlag is true', async () => {
+    (api.fetchProcessors as jest.Mock).mockResolvedValue({
+      status: 'SUCCESS',
+      response: [{ displayName: 'Processor A', processorId: '123' }],
     });
+
+    render(<MockComponent {...mockProps} />);
+
+    await waitFor(() => {
+      expect(api.fetchProcessors).toHaveBeenCalled();
+    });
+
+    expect(screen.getByDisplayValue('Processor A')).toBeInTheDocument();
+  });
+
+  test('should set processorId when processorName changes', async () => {
+    (api.fetchProcessors as jest.Mock).mockResolvedValue({
+      status: 'SUCCESS',
+      response: [{ displayName: 'Processor B', processorId: '456' }],
+    });
+
+    render(<MockComponent {...mockProps} />);
+
+    await waitFor(() => {
+      expect(api.fetchProcessors).toHaveBeenCalled();
+    });
+
+    fireEvent.change(screen.getByLabelText('Processor Name'), { target: { value: 'Processor B' } });
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Processor B')).toBeInTheDocument();
+    });
+  });
+
+  test('should fetch versions list when processorId changes', async () => {
+    (api.fetchProcessors as jest.Mock).mockResolvedValue({
+      status: 'SUCCESS',
+      response: [{ displayName: 'Processor A', processorId: '123' }],
+    });
+    (api.fetchVersions as jest.Mock).mockResolvedValue({
+      status: 'SUCCESS',
+      response: [{ versionId: 'v2' }],
+    });
+
+    render(<MockComponent {...mockProps} />);
+
+    await waitFor(() => {
+      expect(api.fetchProcessors).toHaveBeenCalled();
+    });
+
+    fireEvent.change(screen.getByLabelText('Processor Name'), { target: { value: 'Processor A' } });
+    await waitFor(() => {
+      expect(api.fetchVersions).toHaveBeenCalledWith('123');
+    });
+  });
+
+  test('should show error message on API failure', async () => {
+    (api.fetchProcessors as jest.Mock).mockRejectedValue({ detail: 'Error fetching processors' });
+
+    render(<MockComponent {...mockProps} />);
+
+    await waitFor(() => {
+      expect(api.fetchProcessors).toHaveBeenCalled();
+    });
+
+    expect(screen.getByText('Error fetching processors')).toBeInTheDocument();
+  });
+
+  test('should update node properties on save button click', () => {
+    render(<MockComponent {...mockProps} />);
+
+    fireEvent.click(screen.getByText('Save'));
+
+    expect(mockProps.handleNodeProperties).toHaveBeenCalledWith({
+      processorId: '123',
+      displayName: 'Processor A',
+      type: 'Doc AI',
+      versionId: 'v1',
+      category: 'Document',
+    });
+  });
+
+  test('should reset states and close drawer on handleClick', () => {
+    render(<MockComponent {...mockProps} />);
+
+    fireEvent.click(screen.getByText('Close'));
+
+    expect(mockProps.handleDrawerFlag).toHaveBeenCalledWith(false);
+    expect(screen.queryByDisplayValue('Processor A')).not.toBeInTheDocument();
+  });
+
+  test('should handle error and close error message on close', () => {
+    (api.fetchProcessors as jest.Mock).mockRejectedValue({ detail: 'Error fetching processors' });
+
+    render(<MockComponent {...mockProps} />);
+
+    waitFor(() => {
+      expect(screen.getByText('Error fetching processors')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('Close Error'));
+
+    expect(screen.queryByText('Error fetching processors')).not.toBeInTheDocument();
   });
 });
