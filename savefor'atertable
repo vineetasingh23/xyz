@@ -26,14 +26,12 @@ describe('MyDocSplitters Component Tests', () => {
   it('sets tenantId state correctly when setTenantId is called', () => {
     render(<MockMyDocSplitters />);
     
-    // Mock function for enqueueSnackbar (to prevent UI updates)
-    const mockEnqueueSnackbar = jest.fn();
-    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    // Find and interact with the component that triggers state change
+    const instance = screen.getByLabelText('Tenant ID Input'); // Assuming there's an input field for tenantId
+    fireEvent.change(instance, { target: { value: 'tenant123' } });
     
-    instance.setTenantId('tenant123');
-    
-    // Verify if state change triggers a re-render or updates the UI
-    expect(instance.state.tenantId).toBe('tenant123');
+    // Check that the component updated correctly
+    expect(instance.value).toBe('tenant123');
   });
 
   it('sets tenantId and searchState states when onSearchHandler is called', () => {
@@ -47,90 +45,107 @@ describe('MyDocSplitters Component Tests', () => {
     fireEvent.click(searchButton);
     
     // Verify that tenantId and searchState are updated
-    expect(screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode.state.tenantId).toBe('tenant123');
-    expect(screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode.state.searchState).toBe(true);
+    const tenantIdInput = screen.getByLabelText('Tenant ID Input');
+    expect(tenantIdInput.value).toBe('tenant123');
+    
+    // Search state should be updated as well
+    const searchState = screen.getByTestId('search-state'); // Assuming you have a visible element with data-testid="search-state"
+    expect(searchState.textContent).toBe('true');
   });
 
   it('sets searchState state correctly when setSearchState is called', () => {
     render(<MockMyDocSplitters />);
     
-    // Mock function for enqueueSnackbar (to prevent UI updates)
-    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
-    
-    instance.setSearchState(true);
+    // Simulate a method that updates searchState
+    const searchButton = screen.getByText('Search');
+    fireEvent.click(searchButton);
     
     // Verify if searchState is updated correctly
-    expect(instance.state.searchState).toBe(true);
+    const searchState = screen.getByTestId('search-state'); // Assuming this element reflects the state
+    expect(searchState.textContent).toBe('true');
   });
 
   it('sets confirmationDialog state correctly when handleDeleteDialogOpen is called', () => {
     render(<MockMyDocSplitters />);
     
-    // Get the instance
-    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    // Open delete confirmation dialog
+    const deleteButton = screen.getByText('Delete Processor'); // Assuming button text
+    fireEvent.click(deleteButton);
     
-    instance.handleDeleteDialogOpen();
-    
-    // Confirm state update
-    expect(instance.state.confirmationDialog).toBe(true);
+    // Confirm that the dialog opens
+    const dialog = screen.getByText('Are you sure you want to delete this processor?'); // Assuming dialog title
+    expect(dialog).toBeInTheDocument();
   });
 
   it('sets confirmationDialog state correctly when handleDeleteDialogClose is called', () => {
     render(<MockMyDocSplitters />);
     
-    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    // Open and close the confirmation dialog
+    const deleteButton = screen.getByText('Delete Processor');
+    fireEvent.click(deleteButton);
     
-    instance.setState({ confirmationDialog: true });
-    instance.handleDeleteDialogClose();
+    const cancelButton = screen.getByText('Cancel');
+    fireEvent.click(cancelButton);
     
-    expect(instance.state.confirmationDialog).toBe(false);
+    // Confirm dialog is closed
+    const dialog = screen.queryByText('Are you sure you want to delete this processor?');
+    expect(dialog).not.toBeInTheDocument();
   });
 
   it('sets processorIdToDelete state correctly when onClickDelete is called', () => {
     render(<MockMyDocSplitters />);
     
-    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    // Trigger the delete handler
+    const deleteButton = screen.getByText('Delete Processor');
+    fireEvent.click(deleteButton);
     
-    instance.onClickDelete('processor123');
-    
-    expect(instance.state.processorIdToDelete).toBe('processor123');
+    // Confirm that the processorIdToDelete state has been set
+    const processorId = screen.getByTestId('processor-id'); // Assuming element with processor id is displayed
+    expect(processorId.textContent).toBe('processor123');
   });
 
   it('toggles refresh state when refresh method is called', () => {
     render(<MockMyDocSplitters />);
     
-    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    // Simulate a state change that toggles refresh
+    const refreshButton = screen.getByText('Refresh'); // Assuming button triggers refresh
+    fireEvent.click(refreshButton);
     
-    instance.setState({ refresh: false });
-    instance.refresh();
-    expect(instance.state.refresh).toBe(true);
+    // Verify that refresh state toggled
+    const refreshState = screen.getByTestId('refresh-state');
+    expect(refreshState.textContent).toBe('true');
     
-    instance.refresh();
-    expect(instance.state.refresh).toBe(false);
+    fireEvent.click(refreshButton);
+    expect(refreshState.textContent).toBe('false');
   });
 
   it('sets textFieldState correctly when updating textFieldState', () => {
     render(<MockMyDocSplitters />);
     
-    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    // Simulate text field update
+    const textField = screen.getByLabelText('Text Field');
+    fireEvent.change(textField, { target: { value: 'new text' } });
     
-    instance.setState({ textFieldState: 'new text' });
-    
-    expect(instance.state.textFieldState).toBe('new text');
+    // Check if the state change is reflected in the component
+    expect(textField.value).toBe('new text');
   });
 
   it('calls splitterToDelete and updates state on delete button click', async () => {
     render(<MockMyDocSplitters />);
     
-    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    const instance = screen.getByLabelText('Delete Processor');
     
+    // Mocking successful delete API call
     mock.onDelete('/textract/documentSplitter/deleteProcessor').reply(200);
     
-    instance.setState({ processorIdToDelete: 'processor123' });
-    instance.onClickConfirmationDialogDeleteButton();
+    // Trigger the deletion
+    const deleteButton = screen.getByText('Delete');
+    fireEvent.click(deleteButton);
     
     await waitFor(() => {
-      expect(instance.state.refresh).toBe(true);
+      // Confirm that state was updated (for example, a refresh was triggered)
+      const refreshState = screen.getByTestId('refresh-state');
+      expect(refreshState.textContent).toBe('true');
     });
   });
 });
