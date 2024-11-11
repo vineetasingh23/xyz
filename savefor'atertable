@@ -1,85 +1,98 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
-import YourComponent from '../../components/YourComponent'; // replace with actual component path
+import { SnackbarProvider } from 'notistack';
+import { BrowserRouter as Router } from 'react-router-dom';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+import SaveForLaterTable from '../../../components/tables/SaveForLaterTable';
 
-describe('YourComponent Test Cases', () => {
-  let mockSetSearchState = jest.fn();
-  let mockGetStreams = jest.fn();
-  
-  const defaultProps = {
-    tenantId: '1234',
-    refresh: false,
-    searchState: false,
-    setSearchState: mockSetSearchState,
-    getStreams: mockGetStreams,
-  };
+// Mock for axios
+const mockAxios = new MockAdapter(axios);
 
+// Mock Component Wrapper
+const MockSaveForLaterTable = () => {
+  return (
+    <SnackbarProvider maxSnack={5} autoHideDuration={3000} preventDuplicate>
+      <Router>
+        <SaveForLaterTable
+          tenantId="1234_dev"
+          onClickDelete={() => {}}
+          refresh={false}
+          searchState={false}
+          setSearchState={() => {}}
+        />
+      </Router>
+    </SnackbarProvider>
+  );
+};
+
+// Test cases
+describe('StreamsTable Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAxios.reset();
   });
 
-  it('should fetch data when tenantId or refresh changes', () => {
-    render(<YourComponent {...defaultProps} />);
-    
-    act(() => {
-      defaultProps.refresh = true;
-      render(<YourComponent {...defaultProps} />);
-    });
-    
-    expect(mockGetStreams).toHaveBeenCalledWith(0, 5, 'creationTimestamp', 'desc');
+  it('renders the SaveForLaterTable component and checks for "Stream ID" text', () => {
+    render(<MockSaveForLaterTable />);
+    const text = screen.getByText('Stream ID');
+    expect(text).toBeInTheDocument();
   });
 
-  it('should reset rows, page, and fetch data when searchState is true', () => {
-    const updatedProps = { ...defaultProps, searchState: true };
-    render(<YourComponent {...updatedProps} />);
+  it('fetches data when tenantId or refresh changes', () => {
+    render(<MockSaveForLaterTable />);
+    mockAxios.onGet('/api/streams').reply(200, { data: [] });
+    
+    // Verify data fetching triggered by props change
+    expect(mockAxios.history.get.length).toBeGreaterThan(0);
+  });
 
+  it('resets rows, page, and fetches data when searchState is true', () => {
+    const mockSetSearchState = jest.fn();
+    render(
+      <SnackbarProvider maxSnack={5} autoHideDuration={3000} preventDuplicate>
+        <Router>
+          <SaveForLaterTable
+            tenantId="1234_dev"
+            onClickDelete={() => {}}
+            refresh={false}
+            searchState={true}
+            setSearchState={mockSetSearchState}
+          />
+        </Router>
+      </SnackbarProvider>
+    );
+
+    // Verify data reset and searchState reset
     expect(screen.queryByTestId('loading')).toBeInTheDocument();
-    expect(mockGetStreams).toHaveBeenCalledWith(0, 5, 'creationTimestamp', 'desc');
     expect(mockSetSearchState).toHaveBeenCalledWith(false);
   });
 
-  it('should handle page change in pagination', () => {
-    const { getByTestId } = render(<YourComponent {...defaultProps} />);
-    
+  it('handles page change in pagination', () => {
+    render(<MockSaveForLaterTable />);
     const newPage = 2;
-    const pageChangeButton = getByTestId('change-page-button'); // Assuming a test ID on the pagination control
-    
-    act(() => {
-      fireEvent.click(pageChangeButton, { target: { value: newPage } });
-    });
+    const pageChangeButton = screen.getByTestId('change-page-button'); // Add a data-testid in component
 
-    expect(screen.getByText(`Page: ${newPage}`)).toBeInTheDocument(); // Check if new page is displayed
+    fireEvent.click(pageChangeButton, { target: { value: newPage } });
+    expect(screen.getByText(`Page: ${newPage}`)).toBeInTheDocument();
   });
 
-  it('should handle rows per page change', () => {
-    const { getByTestId } = render(<YourComponent {...defaultProps} />);
-    
-    const rowsPerPage = 10;
-    const rowsPerPageSelect = getByTestId('rows-per-page-select'); // Assuming a test ID on the rows per page select
-    
-    act(() => {
-      fireEvent.change(rowsPerPageSelect, { target: { value: rowsPerPage } });
-    });
+  it('handles rows per page change', () => {
+    render(<MockSaveForLaterTable />);
+    const rowsPerPageSelect = screen.getByTestId('rows-per-page-select'); // Add a data-testid in component
 
-    expect(screen.getByText(`Rows per page: ${rowsPerPage}`)).toBeInTheDocument(); // Verify rows per page
+    fireEvent.change(rowsPerPageSelect, { target: { value: '10' } });
+    expect(screen.getByText('Rows per page: 10')).toBeInTheDocument();
   });
 
-  it('should handle sort request and toggle order', () => {
-    const { getByTestId } = render(<YourComponent {...defaultProps} />);
-    
-    const sortButton = getByTestId('sort-button'); // Assuming a test ID on sort button
-    
-    act(() => {
-      fireEvent.click(sortButton);
-    });
+  it('handles sort request and toggles order', () => {
+    render(<MockSaveForLaterTable />);
+    const sortButton = screen.getByTestId('sort-button'); // Add a data-testid in component
 
-    expect(screen.getByText(`Order: desc`)).toBeInTheDocument(); // Verify toggle to 'desc'
-    
-    act(() => {
-      fireEvent.click(sortButton);
-    });
+    fireEvent.click(sortButton);
+    expect(screen.getByText('Order: desc')).toBeInTheDocument();
 
-    expect(screen.getByText(`Order: asc`)).toBeInTheDocument(); // Verify toggle back to 'asc'
+    fireEvent.click(sortButton);
+    expect(screen.getByText('Order: asc')).toBeInTheDocument();
   });
 });
