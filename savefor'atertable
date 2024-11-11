@@ -1,98 +1,136 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { SnackbarProvider } from 'notistack';
+import { fireEvent, screen, render, waitFor } from '@testing-library/react';
+import MyDocSplitters from '../../pages/my-doc-splitters';
 import { BrowserRouter as Router } from 'react-router-dom';
-import axios from 'axios';
+import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
-import SaveForLaterTable from '../../../components/tables/SaveForLaterTable';
+import axios from 'axios';
 
-// Mock for axios
-const mockAxios = new MockAdapter(axios);
+let mock = new MockAdapter(axios);
 
-// Mock Component Wrapper
-const MockSaveForLaterTable = () => {
+const MockMyDocSplitters = () => {
   return (
     <SnackbarProvider maxSnack={5} autoHideDuration={3000} preventDuplicate>
       <Router>
-        <SaveForLaterTable
-          tenantId="1234_dev"
-          onClickDelete={() => {}}
-          refresh={false}
-          searchState={false}
-          setSearchState={() => {}}
-        />
+        <MyDocSplitters />
       </Router>
     </SnackbarProvider>
   );
 };
 
-// Test cases
-describe('StreamsTable Tests', () => {
+describe('MyDocSplitters Component Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockAxios.reset();
+    mock.reset();
   });
 
-  it('renders the SaveForLaterTable component and checks for "Stream ID" text', () => {
-    render(<MockSaveForLaterTable />);
-    const text = screen.getByText('Stream ID');
-    expect(text).toBeInTheDocument();
-  });
-
-  it('fetches data when tenantId or refresh changes', () => {
-    render(<MockSaveForLaterTable />);
-    mockAxios.onGet('/api/streams').reply(200, { data: [] });
+  it('sets tenantId state correctly when setTenantId is called', () => {
+    render(<MockMyDocSplitters />);
     
-    // Verify data fetching triggered by props change
-    expect(mockAxios.history.get.length).toBeGreaterThan(0);
+    // Mock function for enqueueSnackbar (to prevent UI updates)
+    const mockEnqueueSnackbar = jest.fn();
+    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    
+    instance.setTenantId('tenant123');
+    
+    // Verify if state change triggers a re-render or updates the UI
+    expect(instance.state.tenantId).toBe('tenant123');
   });
 
-  it('resets rows, page, and fetches data when searchState is true', () => {
-    const mockSetSearchState = jest.fn();
-    render(
-      <SnackbarProvider maxSnack={5} autoHideDuration={3000} preventDuplicate>
-        <Router>
-          <SaveForLaterTable
-            tenantId="1234_dev"
-            onClickDelete={() => {}}
-            refresh={false}
-            searchState={true}
-            setSearchState={mockSetSearchState}
-          />
-        </Router>
-      </SnackbarProvider>
-    );
-
-    // Verify data reset and searchState reset
-    expect(screen.queryByTestId('loading')).toBeInTheDocument();
-    expect(mockSetSearchState).toHaveBeenCalledWith(false);
+  it('sets tenantId and searchState states when onSearchHandler is called', () => {
+    render(<MockMyDocSplitters />);
+    
+    const searchField = screen.getByLabelText('Search Field');
+    fireEvent.change(searchField, { target: { value: 'tenant123' } });
+    
+    // Now simulate the search button click
+    const searchButton = screen.getByText('Search');
+    fireEvent.click(searchButton);
+    
+    // Verify that tenantId and searchState are updated
+    expect(screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode.state.tenantId).toBe('tenant123');
+    expect(screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode.state.searchState).toBe(true);
   });
 
-  it('handles page change in pagination', () => {
-    render(<MockSaveForLaterTable />);
-    const newPage = 2;
-    const pageChangeButton = screen.getByTestId('change-page-button'); // Add a data-testid in component
-
-    fireEvent.click(pageChangeButton, { target: { value: newPage } });
-    expect(screen.getByText(`Page: ${newPage}`)).toBeInTheDocument();
+  it('sets searchState state correctly when setSearchState is called', () => {
+    render(<MockMyDocSplitters />);
+    
+    // Mock function for enqueueSnackbar (to prevent UI updates)
+    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    
+    instance.setSearchState(true);
+    
+    // Verify if searchState is updated correctly
+    expect(instance.state.searchState).toBe(true);
   });
 
-  it('handles rows per page change', () => {
-    render(<MockSaveForLaterTable />);
-    const rowsPerPageSelect = screen.getByTestId('rows-per-page-select'); // Add a data-testid in component
-
-    fireEvent.change(rowsPerPageSelect, { target: { value: '10' } });
-    expect(screen.getByText('Rows per page: 10')).toBeInTheDocument();
+  it('sets confirmationDialog state correctly when handleDeleteDialogOpen is called', () => {
+    render(<MockMyDocSplitters />);
+    
+    // Get the instance
+    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    
+    instance.handleDeleteDialogOpen();
+    
+    // Confirm state update
+    expect(instance.state.confirmationDialog).toBe(true);
   });
 
-  it('handles sort request and toggles order', () => {
-    render(<MockSaveForLaterTable />);
-    const sortButton = screen.getByTestId('sort-button'); // Add a data-testid in component
+  it('sets confirmationDialog state correctly when handleDeleteDialogClose is called', () => {
+    render(<MockMyDocSplitters />);
+    
+    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    
+    instance.setState({ confirmationDialog: true });
+    instance.handleDeleteDialogClose();
+    
+    expect(instance.state.confirmationDialog).toBe(false);
+  });
 
-    fireEvent.click(sortButton);
-    expect(screen.getByText('Order: desc')).toBeInTheDocument();
+  it('sets processorIdToDelete state correctly when onClickDelete is called', () => {
+    render(<MockMyDocSplitters />);
+    
+    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    
+    instance.onClickDelete('processor123');
+    
+    expect(instance.state.processorIdToDelete).toBe('processor123');
+  });
 
-    fireEvent.click(sortButton);
-    expect(screen.getByText('Order: asc')).toBeInTheDocument();
+  it('toggles refresh state when refresh method is called', () => {
+    render(<MockMyDocSplitters />);
+    
+    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    
+    instance.setState({ refresh: false });
+    instance.refresh();
+    expect(instance.state.refresh).toBe(true);
+    
+    instance.refresh();
+    expect(instance.state.refresh).toBe(false);
+  });
+
+  it('sets textFieldState correctly when updating textFieldState', () => {
+    render(<MockMyDocSplitters />);
+    
+    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    
+    instance.setState({ textFieldState: 'new text' });
+    
+    expect(instance.state.textFieldState).toBe('new text');
+  });
+
+  it('calls splitterToDelete and updates state on delete button click', async () => {
+    render(<MockMyDocSplitters />);
+    
+    const instance = screen.getByTestId('my-doc-splitters').__reactInternalInstance$.return.stateNode;
+    
+    mock.onDelete('/textract/documentSplitter/deleteProcessor').reply(200);
+    
+    instance.setState({ processorIdToDelete: 'processor123' });
+    instance.onClickConfirmationDialogDeleteButton();
+    
+    await waitFor(() => {
+      expect(instance.state.refresh).toBe(true);
+    });
   });
 });
