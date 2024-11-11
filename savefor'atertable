@@ -1,0 +1,85 @@
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
+import YourComponent from '../../components/YourComponent'; // replace with actual component path
+
+describe('YourComponent Test Cases', () => {
+  let mockSetSearchState = jest.fn();
+  let mockGetStreams = jest.fn();
+  
+  const defaultProps = {
+    tenantId: '1234',
+    refresh: false,
+    searchState: false,
+    setSearchState: mockSetSearchState,
+    getStreams: mockGetStreams,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should fetch data when tenantId or refresh changes', () => {
+    render(<YourComponent {...defaultProps} />);
+    
+    act(() => {
+      defaultProps.refresh = true;
+      render(<YourComponent {...defaultProps} />);
+    });
+    
+    expect(mockGetStreams).toHaveBeenCalledWith(0, 5, 'creationTimestamp', 'desc');
+  });
+
+  it('should reset rows, page, and fetch data when searchState is true', () => {
+    const updatedProps = { ...defaultProps, searchState: true };
+    render(<YourComponent {...updatedProps} />);
+
+    expect(screen.queryByTestId('loading')).toBeInTheDocument();
+    expect(mockGetStreams).toHaveBeenCalledWith(0, 5, 'creationTimestamp', 'desc');
+    expect(mockSetSearchState).toHaveBeenCalledWith(false);
+  });
+
+  it('should handle page change in pagination', () => {
+    const { getByTestId } = render(<YourComponent {...defaultProps} />);
+    
+    const newPage = 2;
+    const pageChangeButton = getByTestId('change-page-button'); // Assuming a test ID on the pagination control
+    
+    act(() => {
+      fireEvent.click(pageChangeButton, { target: { value: newPage } });
+    });
+
+    expect(screen.getByText(`Page: ${newPage}`)).toBeInTheDocument(); // Check if new page is displayed
+  });
+
+  it('should handle rows per page change', () => {
+    const { getByTestId } = render(<YourComponent {...defaultProps} />);
+    
+    const rowsPerPage = 10;
+    const rowsPerPageSelect = getByTestId('rows-per-page-select'); // Assuming a test ID on the rows per page select
+    
+    act(() => {
+      fireEvent.change(rowsPerPageSelect, { target: { value: rowsPerPage } });
+    });
+
+    expect(screen.getByText(`Rows per page: ${rowsPerPage}`)).toBeInTheDocument(); // Verify rows per page
+  });
+
+  it('should handle sort request and toggle order', () => {
+    const { getByTestId } = render(<YourComponent {...defaultProps} />);
+    
+    const sortButton = getByTestId('sort-button'); // Assuming a test ID on sort button
+    
+    act(() => {
+      fireEvent.click(sortButton);
+    });
+
+    expect(screen.getByText(`Order: desc`)).toBeInTheDocument(); // Verify toggle to 'desc'
+    
+    act(() => {
+      fireEvent.click(sortButton);
+    });
+
+    expect(screen.getByText(`Order: asc`)).toBeInTheDocument(); // Verify toggle back to 'asc'
+  });
+});
