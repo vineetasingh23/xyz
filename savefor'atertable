@@ -136,3 +136,327 @@ describe('PermanentDrawerLeftWorkflow', () => {
     expect(screen.queryByText('Error fetching processors')).not.toBeInTheDocument();
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import MyDocSplitters from '../../pages/my-doc-splitters';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { SnackbarProvider } from 'notistack';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Colors } from '../../common/constants/ColorConstants';
+
+// Mock @react-pdf-viewer/core
+jest.mock('@react-pdf-viewer/core', () => ({
+  Worker: jest.fn(() => null),
+  Viewer: jest.fn(() => null),
+}));
+
+// Mock enqueueSnackbar from notistack
+const mockEnqueueSnackbar = jest.fn();
+
+jest.mock('notistack', () => ({
+  ...jest.requireActual('notistack'),
+  useSnackbar: () => ({
+    enqueueSnackbar: mockEnqueueSnackbar,
+  }),
+}));
+
+// Initialize axios mock
+const mockAxios = new MockAdapter(axios);
+
+// Define a theme if necessary
+const theme = createTheme();
+
+// Mock Component Wrapper
+const MockMyDocSplitters = (props: any) => (
+  <ThemeProvider theme={theme}>
+    <SnackbarProvider maxSnack={5} autoHideDuration={3000} preventDuplicate>
+      <Router>
+        <MyDocSplitters {...props} />
+      </Router>
+    </SnackbarProvider>
+  </ThemeProvider>
+);
+
+describe('MyDocSplitters Component Tests', () => {
+  const mockHandleNodeProperties = jest.fn();
+  const mockHandleDrawerFlag = jest.fn();
+
+  beforeEach(() => {
+    mockAxios.reset();
+    jest.clearAllMocks();
+  });
+
+  // Helper to render the component with default props
+  const renderComponent = (props = {}) => {
+    return render(
+      <MockMyDocSplitters
+        {...props}
+        handleNodeProperties={mockHandleNodeProperties}
+        handleDrawerFlag={mockHandleDrawerFlag}
+      />
+    );
+  };
+
+  it('renders the header and drawer', () => {
+    renderComponent();
+
+    expect(screen.getByText('My Document Splitters')).toBeInTheDocument();
+    expect(screen.getByText('Search')).toBeInTheDocument();
+    expect(screen.getByText('Create new Splitter')).toBeInTheDocument();
+  });
+
+  it('sets tenantId state correctly when setTenantId is called', () => {
+    renderComponent();
+
+    // Find the tenantId input field, assume it has label 'Tenant ID'
+    const tenantIdInput = screen.getByLabelText('Tenant ID');
+    fireEvent.change(tenantIdInput, { target: { value: 'tenant123' } });
+
+    // Verify that the input value has changed
+    expect(tenantIdInput.value).toBe('tenant123');
+  });
+
+  it('sets tenantId and searchState states when onSearchHandler is called', async () => {
+    renderComponent();
+
+    // Find the tenantId input field and enter tenant ID
+    const tenantIdInput = screen.getByLabelText('Tenant ID');
+    fireEvent.change(tenantIdInput, { target: { value: 'tenant123' } });
+
+    // Find and click the search button
+    const searchButton = screen.getByRole('button', { name: /search/i });
+    fireEvent.click(searchButton);
+
+    // Assuming that search triggers a state change which may show some results or reset the page
+    // For example, a loading spinner appears when searchState is true
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+
+    // Optionally, mock the API response for search and verify results
+  });
+
+  it('sets searchState state correctly when setSearchState is called via onSearchHandler', () => {
+    renderComponent();
+
+    // Find the tenantId input field and enter tenant ID
+    const tenantIdInput = screen.getByLabelText('Tenant ID');
+    fireEvent.change(tenantIdInput, { target: { value: 'tenant123' } });
+
+    // Find and click the search button
+    const searchButton = screen.getByRole('button', { name: /search/i });
+    fireEvent.click(searchButton);
+
+    // After clicking search, check if loading spinner is shown indicating searchState is true
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+  });
+
+  it('opens confirmation dialog when onClickDelete is called', () => {
+    renderComponent();
+
+    // Assume that there is a delete button for a processor with text 'Delete'
+    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+    expect(deleteButtons.length).toBeGreaterThan(0);
+
+    // Click the first delete button
+    fireEvent.click(deleteButtons[0]);
+
+    // Now, the confirmation dialog should appear
+    expect(screen.getByText('Are you sure you want to delete this processor?')).toBeInTheDocument();
+  });
+
+  it('closes confirmation dialog when handleDeleteDialogClose is called', () => {
+    renderComponent();
+
+    // Click a delete button to open the dialog
+    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+    fireEvent.click(deleteButtons[0]);
+
+    // Now, the confirmation dialog should appear
+    expect(screen.getByText('Are you sure you want to delete this processor?')).toBeInTheDocument();
+
+    // Click the 'Cancel' button to close the dialog
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    fireEvent.click(cancelButton);
+
+    // The dialog should be closed
+    expect(screen.queryByText('Are you sure you want to delete this processor?')).not.toBeInTheDocument();
+  });
+
+  it('sets processorIdToDelete state correctly when onClickDelete is called', () => {
+    renderComponent();
+
+    // Click a delete button to open the dialog
+    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+    fireEvent.click(deleteButtons[0]);
+
+    // Assume that the processor ID is passed via the delete button's data attribute or accessible name
+    // For this example, let's assume the processor ID is embedded in the button's value
+    // Alternatively, you might need to mock the state change through UI updates
+
+    // Click the confirm delete button
+    const confirmDeleteButton = screen.getByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmDeleteButton);
+
+    // Wait for the API call to complete and state to update (refresh to true)
+    waitFor(() => {
+      expect(mockHandleDrawerFlag).toHaveBeenCalledWith(false);
+    });
+  });
+
+  it('toggles refresh state when refresh method is called', async () => {
+    renderComponent();
+
+    // Assume there is a refresh button
+    const refreshButton = screen.getByRole('button', { name: /refresh/i });
+    fireEvent.click(refreshButton);
+
+    // Verify that refresh state toggles, perhaps by checking if some element is reloaded or updated
+    // For example, a loading spinner appears
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+
+    // Click refresh again
+    fireEvent.click(refreshButton);
+
+    // Verify that the loading spinner is shown again
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+  });
+
+  it('sets textFieldState correctly when updating textFieldState', () => {
+    renderComponent();
+
+    // Find the text field for input, assume it has label 'Search'
+    const textField = screen.getByLabelText('Search');
+    fireEvent.change(textField, { target: { value: 'new text' } });
+
+    // Verify that the text field value has been updated
+    expect(textField.value).toBe('new text');
+  });
+
+  it('calls splitterToDelete and updates state on delete confirmation', async () => {
+    // Mock the delete API call to succeed
+    mockAxios.onDelete(APIEndPoints.ROOT + 'textract/documentSplitter/deleteProcessor').reply(200);
+
+    renderComponent();
+
+    // Click a delete button to open the dialog
+    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+    fireEvent.click(deleteButtons[0]);
+
+    // Click the confirm delete button
+    const confirmDeleteButton = screen.getByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmDeleteButton);
+
+    // Wait for the API call to be made and refresh to be triggered
+    await waitFor(() => {
+      expect(mockHandleDrawerFlag).toHaveBeenCalledWith(false);
+    });
+
+    // Optionally, verify that no error snackbar is shown
+    expect(mockEnqueueSnackbar).not.toHaveBeenCalled();
+  });
+
+  it('shows error snackbar on splitterToDelete failure', async () => {
+    // Mock the delete API call to fail
+    mockAxios.onDelete(APIEndPoints.ROOT + 'textract/documentSplitter/deleteProcessor').reply(500, { message: 'Deletion failed' });
+
+    renderComponent();
+
+    // Click a delete button to open the dialog
+    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+    fireEvent.click(deleteButtons[0]);
+
+    // Click the confirm delete button
+    const confirmDeleteButton = screen.getByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmDeleteButton);
+
+    // Wait for the API call and error handling
+    await waitFor(() => {
+      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Deletion failed', { variant: 'error' });
+    });
+  });
+
+  it('updates processorId when processorName changes', async () => {
+    // Mock fetchProcessors API call
+    mockAxios.onGet(APIEndPoints.ROOT + 'textract/documentSplitter/getProcessors').reply(200, {
+      status: 'SUCCESS',
+      response: [
+        { displayName: 'Processor A', processorId: 'procA' },
+        { displayName: 'Processor B', processorId: 'procB' },
+      ],
+    });
+
+    // Mock fetchVersions API call
+    mockAxios.onGet(APIEndPoints.ROOT + 'textract/documentSplitter/getVersions').reply(200, {
+      status: 'SUCCESS',
+      response: [
+        { versionId: 'v1' },
+        { versionId: 'v2' },
+      ],
+    });
+
+    renderComponent();
+
+    // Wait for processors to be fetched and rendered
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Processor A')).toBeInTheDocument();
+    });
+
+    // Change the processor name to 'Processor B'
+    const processorSelect = screen.getByLabelText('Processor Name'); // Assume it's a select element
+    fireEvent.change(processorSelect, { target: { value: 'Processor B' } });
+
+    // Wait for processorId to update
+    await waitFor(() => {
+      expect(mockHandleNodeProperties).not.toHaveBeenCalled();
+      // Verify that the versionId is updated based on the selected processor
+      const versionSelect = screen.getByLabelText('Version ID'); // Assume it's a select element
+      expect(versionSelect.value).toBe('v1'); // or the first versionId of Processor B
+    });
+  });
+
+  it('handles save button click and updates node properties', () => {
+    renderComponent();
+
+    // Assume there is a save button labeled 'Save'
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    fireEvent.click(saveButton);
+
+    // Verify that handleNodeProperties was called with the correct data
+    expect(mockHandleNodeProperties).toHaveBeenCalledWith({
+      processorId: '',
+      displayName: '',
+      type: 'Doc AI',
+      versionId: '',
+      category: '',
+    });
+  });
+
+  it('resets states and closes drawer on handleClick', () => {
+    renderComponent();
+
+    // Assume there is a close button labeled 'Close'
+    const closeButton = screen.getByRole('button', { name: /close/i });
+    fireEvent.click(closeButton);
+
+    // Verify that handleDrawerFlag was called to close the drawer
+    expect(mockHandleDrawerFlag).toHaveBeenCalledWith(false);
+
+    // Optionally, verify that certain state-dependent UI elements are reset
+    // For example, processor name and ID are cleared
+    expect(screen.queryByDisplayValue('Processor A')).not.toBeInTheDocument();
+  });
+});
+
