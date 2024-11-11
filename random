@@ -1,0 +1,108 @@
+ it('updates tenantId state when setTenantId is called', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.setTenantId('newTenantId')
+    expect(instance.state.tenantId).toBe('newTenantId')
+  })
+
+  it('updates loggingLoader state when setLoggingLoader is called', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.setLoggingLoader(true)
+    expect(instance.state.loggingLoader).toBe(true)
+  })
+
+  it('opens and closes convert confirmation dialog', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.handleConvertDialogOpen()
+    expect(instance.state.convertConfirmationDialogue).toBe(true)
+
+    instance.handleConvertDialogClose()
+    expect(instance.state.convertConfirmationDialogue).toBe(false)
+  })
+
+  it('opens and closes folder delete confirmation dialog', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.handleFolderDeleteDialogOpen()
+    expect(instance.state.confirmationDialogue).toBe(true)
+
+    instance.handleFolderDeleteDialogClose()
+    expect(instance.state.confirmationDialogue).toBe(false)
+  })
+
+  it('opens and closes restrict operation dialog', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.handleRestrictOperationDialogOpen()
+    expect(instance.state.isStorageOperationRestricted).toBe(true)
+
+    instance.handleRestrictOperationDialogClose()
+    expect(instance.state.isStorageOperationRestricted).toBe(false)
+  })
+
+  it('opens and closes convert output dialog', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.handleConvertOutputDialogOpen()
+    expect(instance.state.convertOutputDialogue).toBe(true)
+
+    instance.handleConvertOutputDialogClose()
+    expect(instance.state.convertOutputDialogue).toBe(false)
+  })
+
+  it('sets the convert option correctly', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.setConvertOption('optionValue')
+    expect(instance.state.convertOption).toBe('optionValue')
+  })
+
+  it('toggles modalVisibility state', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.modalVisibilityHandler()
+    expect(instance.state.modalVisibility).toBe(true)
+  })
+
+  it('updates checkedFiles state', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    const files = [{ fileName: 'file1' }]
+    instance.setChecked(files)
+    expect(instance.state.checkedFiles).toEqual(files)
+  })
+
+  it('sets filenames correctly', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.setFilenames('newFilename')
+    expect(instance.state.filenames).toBe('newFilename')
+  })
+
+  it('updates checkedFilenames correctly', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.setState({ checkedFiles: [{ fileName: 'file1.pdf' }] })
+    instance.setCheckedFilenames()
+    expect(instance.state.filenames).toContain('file1.pdf')
+    expect(instance.state.checkedFiles.length).toBe(1)
+  })
+
+  it('toggles deleteNonPDFFiles flag', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.setState({ deleteNonPDFFiles: false })
+    instance.setDeleteToggleFlag()
+    expect(instance.state.deleteNonPDFFiles).toBe(true)
+  })
+
+  it('sets current page correctly', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.setCurrentPage(3)
+    expect(instance.state.currentPageInViewSection).toBe(3)
+  })
+
+  it('updates isAllFilesChecked state', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.setIsAllFilesChecked(true)
+    expect(instance.state.isAllFilesChecked).toBe(true)
+  })
+
+  it('opens and closes new folder dialog', () => {
+    const instance = component.container.firstChild._owner.stateNode
+    instance.setNewFolderDialogOpen()
+    expect(instance.state.newFolderDialogOpen).toBe(true)
+
+    instance.setNewFolderDialogClose()
+    expect(instance.state.newFolderDialogOpen).toBe(false)
+  })
