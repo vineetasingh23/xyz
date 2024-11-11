@@ -1,91 +1,90 @@
-import { ColDef, SizeColumnsToFitGridStrategy, SizeColumnsToFitProvidedWidthStrategy, SizeColumnsToContentStrategy } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
-import { AgGridReact } from "ag-grid-react";
-import React, { useEffect, useMemo, useState } from "react";
-import { Box, useTheme } from '@mui/material';
-import "./tableStyles.css";
-import Loader from './Loader';  // Import the Loader component
+import React from 'react'
+import { render, screen, fireEvent } from '@testing-library/react'
+import '@testing-library/jest-dom/extend-expect'
+import { withSnackBarHook } from '../path/to/withSnackBarHook'
+import CreateStreams from '../path/to/CreateStreams'
+import APIConfig from '../path/to/APIConfig'
+import ErrorConstants from '../path/to/ErrorConstants'
+import SuccessConstants from '../path/to/SuccessConstants'
 
-export default function ModalTable({ data, tableHeaders, isLoading }) {
-  const [gridApi, setGridApi] = useState(null);
-  const [gridColumnApi, setGridColumnApi] = useState(null);
-  const [visibleColumns, setVisibleColumns] = useState(tableHeaders);
-  const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
+// Wrap component with Snackbar hook
+const MockCreateStreams = withSnackBarHook(CreateStreams)
 
-  const setColumns = (columns) => {
-    const newColumnDefs: ColDef[] = [];
-    columns.forEach(header => {
-      if (header.field === "comment") {
-        newColumnDefs.push({
-          field: header.field,
-          hide: header.hide,
-          width: 400,
-        });
-      } else {
-        newColumnDefs.push({
-          field: header.field,
-          hide: header.hide,
-          autoHeight: true,
-        });
-      }
-    });
-    setColumnDefs(newColumnDefs);
-  };
+describe('CreateStreams Component', () => {
+  
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
 
-  const defaultColDef = useMemo(() => {
-    return {
-      filter: "agTextColumnFilter",
-      floatingFilter: false,
-      cellStyle: { overflow: 'auto', wrapText: true, autoHeight: true, height: 'auto' }
-    };
-  }, [data]);
+  test('renders CreateStreams component correctly', () => {
+    render(<MockCreateStreams />)
+    expect(screen.getByText('Signature Capture')).toBeInTheDocument()
+  })
 
-  const calculateRowHeight = (params) => {
-    if (params.data.comment) {
-      const cellData = params.data.comment;
-      const size = 1 + cellData.length / 30;
-      return size > 6 ? 150 : size * 30;
-    }
-    return null;
-  };
+  test('validates empty tenantId and streamName in validationOfParams', () => {
+    const { container } = render(<MockCreateStreams />)
+    const instance = container.firstChild as any
+    
+    instance.setState({ tenantId: '', streamName: '' })
+    const isValid = instance.validationOfParams()
 
-  const onGridReady = (params) => {
-    setGridApi(params.api);
-    setGridColumnApi(params.columnApi);
-  };
+    expect(isValid).toBe(false)
+    expect(screen.getByText(ErrorConstants.EMPTY_FIELDS)).toBeInTheDocument()
+  })
 
-  const autoSizeStrategy = useMemo(() => ({
-    type: "fitGridWidth",
-    defaultMinWidth: 100,
-  }), []);
+  test('showMsg displays success message correctly', () => {
+    render(<MockCreateStreams />)
+    
+    const instance = screen.getByTestId('component-instance') // Assume there’s a way to access the component instance
+    instance.showMsg(SuccessConstants.STREAMS_REQUEST_SUCCESSFUL, 'success')
+    
+    expect(screen.getByText(SuccessConstants.STREAMS_REQUEST_SUCCESSFUL)).toBeInTheDocument()
+  })
 
-  useEffect(() => {
-    setColumns(visibleColumns);
-  }, [visibleColumns]);
+  test('fetchStream calls API and updates state on success', async () => {
+    const mockFetchStreamResponse = { workflowName: 'Test Stream', tenantId: '1234', otherData: {} }
+    
+    jest.spyOn(APIConfig, 'getCall').mockResolvedValue({ data: mockFetchStreamResponse })
+    
+    render(<MockCreateStreams />)
+    
+    const instance = screen.getByTestId('component-instance') // Update based on actual structure
+    
+    await instance.fetchStream('test-id')
+    
+    expect(instance.state.streamName).toBe('Test Stream')
+    expect(instance.state.streamTenantId).toBe('1234')
+  })
 
-  return (
-    <Box
-      className={useTheme().palette.mode === 'dark' ? "ag-theme-quartz-dark" : "ag-theme-quartz"}
-      sx={{ height: "100%", width: "100%" }}
-    >
-      {isLoading ? (
-        <Loader />
-      ) : (
-        <AgGridReact
-          onGridReady={onGridReady}
-          rowData={data}
-          columnDefs={columnDefs}
-          getRowHeight={calculateRowHeight}
-          defaultColDef={defaultColDef}
-          autoSizeStrategy={autoSizeStrategy}
-          rowSelection="multiple"
-          suppressRowClickSelection={true}
-          pagination={true}
-          paginationPageSize={10}
-          paginationPageSizeSelector={[10, 20, 30]}
-        />
-      )}
-    </Box>
-  );
-}
+  test('saveStreamsForLater displays error on API failure', async () => {
+    jest.spyOn(APIConfig, 'postCall').mockRejectedValue({ response: { data: { error: 'Failed to save stream' } } })
+    
+    render(<MockCreateStreams />)
+    const instance = screen.getByTestId('component-instance')
+    
+    await instance.saveStreamsForLater()
+    
+    expect(screen.getByText('Failed to save stream')).toBeInTheDocument()
+  })
+
+  test('changeToEditMode updates view mode correctly', () => {
+    render(<MockCreateStreams />)
+    const instance = screen.getByTestId('component-instance')
+    
+    instance.setState({ tenantId: 'testTenant', currentStreamId: 'testStream', streamTenantId: 'testTenant' })
+    instance.changeToEditMode()
+    
+    expect(instance.state.isViewMode).toBe(false)
+  })
+
+  test('validationOfParams fails when tenantId format is invalid', () => {
+    render(<MockCreateStreams />)
+    const instance = screen.getByTestId('component-instance')
+    
+    instance.setState({ tenantId: 'invalid-id', streamName: 'StreamName' })
+    
+    const isValid = instance.validationOfParams()
+    expect(isValid).toBe(false)
+    expect(screen.getByText(ErrorConstants.ENTER_TENANT_ID)).toBeInTheDocument()
+  })
+})
