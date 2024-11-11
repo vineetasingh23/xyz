@@ -1,70 +1,70 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import ConfirmationBox from './ConfirmationBox';
-import '@testing-library/jest-dom/extend-expect';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Colors } from '../../common/constants/ColorConstants';
+import { render, screen } from '@testing-library/react';
+import UsageBarChart from './UsageBarChart';
+import { CommonConstants } from '../../common/CommonConstants';
+import { ChartColorConstant } from '../../common/constants/ColorConstants';
+import { act } from 'react-dom/test-utils';
 
-describe('ConfirmationBox Component', () => {
-  const mockOnClickConfirm = jest.fn();
-  const mockDialogHandler = jest.fn();
-
-  const defaultProps = {
-    open: true,
-    title: 'Confirm Action',
-    body: 'Are you sure you want to proceed?',
-    onClickConfirm: mockOnClickConfirm,
-    dialogHandler: mockDialogHandler,
+describe('UsageBarChart Component', () => {
+  const mockTenantUsageData = {
+    "Month:1": {
+      MONTH: '2023-01-01',
+      DOC_AI: { TOTAL_USAGE_UNITS: 150 },
+      NLP: { TOTAL_USAGE_UNITS: 100 }
+    },
+    "Month:2": {
+      MONTH: '2023-02-01',
+      DOC_AI: { TOTAL_USAGE_UNITS: 200 },
+      NLP: { TOTAL_USAGE_UNITS: 150 }
+    },
   };
 
-  const renderWithTheme = (mode: 'light' | 'dark') => {
-    const theme = createTheme({ palette: { mode } });
-    render(
-      <ThemeProvider theme={theme}>
-        <ConfirmationBox {...defaultProps} />
-      </ThemeProvider>
-    );
-  };
-
-  it('displays the Confirm and Close buttons', () => {
-    renderWithTheme('light');
-    expect(screen.getByText('Confirm')).toBeInTheDocument();
-    expect(screen.getByText('Close')).toBeInTheDocument();
+  it('initializes usageData state as an empty array', () => {
+    const { result } = render(<UsageBarChart tenantUsageData={{}} />);
+    const usageData = result.current.usageData;
+    expect(usageData).toEqual([]);
   });
 
-  it('calls onClickConfirm with true when the Confirm button is clicked', () => {
-    renderWithTheme('light');
-    fireEvent.click(screen.getByText('Confirm'));
-    expect(mockOnClickConfirm).toHaveBeenCalledWith(true);
+  it('formats the date correctly using calculateMonth function', () => {
+    const calculateMonth = (date: Date) => {
+      const all_months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"
+      ];
+      const newDate = new Date(date);
+      const month = all_months[newDate.getMonth()] + ' ' + newDate.getFullYear();
+      return month;
+    };
+
+    const date = new Date('2023-01-01');
+    expect(calculateMonth(date)).toBe('Jan 2023');
   });
 
-  it('calls dialogHandler with false when the Close button is clicked', () => {
-    renderWithTheme('light');
-    fireEvent.click(screen.getByText('Close'));
-    expect(mockDialogHandler).toHaveBeenCalledWith(false);
+  it('updates usageData state correctly based on tenantUsageData prop', () => {
+    const { rerender } = render(<UsageBarChart tenantUsageData={mockTenantUsageData} />);
+    act(() => {
+      rerender(<UsageBarChart tenantUsageData={mockTenantUsageData} />);
+    });
+
+    const expectedUsageData = [
+      { month: 'Jan 2023', 'Doc AI': 150, NLP: 100 },
+      { month: 'Feb 2023', 'Doc AI': 200, NLP: 150 },
+    ];
+
+    expect(screen.getByTestId('usageBarChart')).toHaveProperty('usageData', expectedUsageData);
   });
 
-  it('applies dbPinkBlueGradient in light mode and dbGreenBlueGradient in dark mode for Confirm button', () => {
-    // Light mode
-    renderWithTheme('light');
-    const confirmButton = screen.getByText('Confirm');
-    expect(confirmButton).toHaveStyle(`background: ${Colors.dbPinkBlueGradient}`);
-    
-    // Rerender in dark mode
-    renderWithTheme('dark');
-    const darkConfirmButton = screen.getByText('Confirm');
-    expect(darkConfirmButton).toHaveStyle(`background: ${Colors.dbGreenBlueGradient}`);
+  it('renders chart elements with expected data', () => {
+    render(<UsageBarChart tenantUsageData={mockTenantUsageData} />);
+
+    expect(screen.getByText('Month-wise units for each service by a particular tenant')).toBeInTheDocument();
+    expect(screen.getByText('Jan 2023')).toBeInTheDocument();
+    expect(screen.getByText('Feb 2023')).toBeInTheDocument();
   });
 
-  it('changes Confirm button hover background to dbBluePinkGradient in light mode and dbBlueGreenGradient in dark mode', () => {
-    renderWithTheme('light');
-    const confirmButton = screen.getByText('Confirm');
+  it('renders XAxis and YAxis labels with correct constants', () => {
+    render(<UsageBarChart tenantUsageData={mockTenantUsageData} />);
 
-    // Simulate hover style by applying :hover styles if available or as expected by the condition.
-    expect(confirmButton).toHaveStyle(`:hover { background: ${Colors.dbBluePinkGradient} }`);
-
-    renderWithTheme('dark');
-    const darkConfirmButton = screen.getByText('Confirm');
-    expect(darkConfirmButton).toHaveStyle(`:hover { background: ${Colors.dbBlueGreenGradient} }`);
+    expect(screen.getByText(CommonConstants.STACKED_BAR_XAXIS_LABEL)).toBeInTheDocument();
+    expect(screen.getByText(CommonConstants.STACKED_BAR_YAXIS_LABEL)).toBeInTheDocument();
   });
 });
