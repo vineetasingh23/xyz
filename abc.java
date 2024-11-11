@@ -1,38 +1,47 @@
-describe('BatchProcessing Method Tests', () => {
-  let component;
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import ConfirmationBox from './ConfirmationBox';
+import '@testing-library/jest-dom/extend-expect';
 
-  beforeEach(() => {
-    component = render(<MockBatchProcessing />);
+describe('ConfirmationBox Component', () => {
+  const mockOnClickConfirm = jest.fn();
+  const mockDialogHandler = jest.fn();
+
+  const defaultProps = {
+    open: true,
+    title: 'Confirm Action',
+    body: 'Are you sure you want to proceed?',
+    onClickConfirm: mockOnClickConfirm,
+    dialogHandler: mockDialogHandler,
+  };
+
+  it('displays the Confirm and Close buttons', () => {
+    render(<ConfirmationBox {...defaultProps} />);
+
+    // Check for the presence of "Confirm" and "Close" texts in the buttons
+    expect(screen.getByText('Confirm')).toBeInTheDocument();
+    expect(screen.getByText('Close')).toBeInTheDocument();
   });
 
-  it('should update tenantId state on calling setTenantId', () => {
-    const instance = component.container.querySelector('BatchProcessing');
-    instance.setTenantId('NewTenant123');
-    expect(instance.state.tenantId).toBe('NewTenant123');
+  it('calls onClickConfirm with true when the Confirm button is clicked', () => {
+    render(<ConfirmationBox {...defaultProps} />);
+
+    // Simulate clicking the Confirm button
+    const confirmButton = screen.getByText('Confirm');
+    fireEvent.click(confirmButton);
+
+    // Check that onClickConfirm is called with true
+    expect(mockOnClickConfirm).toHaveBeenCalledWith(true);
   });
 
-  it('should update tabValue state on calling setTabValue', () => {
-    const instance = component.container.querySelector('BatchProcessing');
-    instance.setTabValue('2');
-    expect(instance.state.tabValue).toBe('2');
-  });
+  it('calls dialogHandler with false when the Close button is clicked', () => {
+    render(<ConfirmationBox {...defaultProps} />);
 
-  it('should update batchId state on calling setBatchId', () => {
-    const instance = component.container.querySelector('BatchProcessing');
-    instance.setBatchId('Batch123');
-    expect(instance.state.batchId).toBe('Batch123');
-  });
+    // Simulate clicking the Close button
+    const closeButton = screen.getByText('Close');
+    fireEvent.click(closeButton);
 
-  it('should call handleChange and update tabValue state', () => {
-    const instance = component.container.querySelector('BatchProcessing');
-    const event = { preventDefault: jest.fn() }; // Mock event
-    instance.handleChange(event, '3');
-    expect(instance.state.tabValue).toBe('3');
-  });
-
-  it('should update loggingLoader state on calling setLoggingLoader', () => {
-    const instance = component.container.querySelector('BatchProcessing');
-    instance.setLoggingLoader(true);
-    expect(instance.state.loggingLoader).toBe(true);
+    // Check that dialogHandler is called with false
+    expect(mockDialogHandler).toHaveBeenCalledWith(false);
   });
 });
