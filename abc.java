@@ -1,70 +1,22 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import UsageBarChart from './UsageBarChart';
-import { CommonConstants } from '../../common/CommonConstants';
-import { ChartColorConstant } from '../../common/constants/ColorConstants';
-import { act } from 'react-dom/test-utils';
+it('calls setTabValue and updates tabValue state correctly when a tab is clicked', () => {
+    // Simulate clicking on a tab, assuming the second tab is labeled "Add Members"
+    const addMembersTab = screen.getByText('Add Members');
+    fireEvent.click(addMembersTab);
 
-describe('UsageBarChart Component', () => {
-  const mockTenantUsageData = {
-    "Month:1": {
-      MONTH: '2023-01-01',
-      DOC_AI: { TOTAL_USAGE_UNITS: 150 },
-      NLP: { TOTAL_USAGE_UNITS: 100 }
-    },
-    "Month:2": {
-      MONTH: '2023-02-01',
-      DOC_AI: { TOTAL_USAGE_UNITS: 200 },
-      NLP: { TOTAL_USAGE_UNITS: 150 }
-    },
-  };
-
-  it('initializes usageData state as an empty array', () => {
-    const { result } = render(<UsageBarChart tenantUsageData={{}} />);
-    const usageData = result.current.usageData;
-    expect(usageData).toEqual([]);
+    // Check if the expected content for "Add Members" is displayed
+    const addMembersContent = screen.getByText('Add or Modify Tenant Details'); // Adjust text as per actual content
+    expect(addMembersContent).toBeInTheDocument();
   });
 
-  it('formats the date correctly using calculateMonth function', () => {
-    const calculateMonth = (date: Date) => {
-      const all_months = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"
-      ];
-      const newDate = new Date(date);
-      const month = all_months[newDate.getMonth()] + ' ' + newDate.getFullYear();
-      return month;
-    };
+  // Verify state update with setState by checking rendered output for tab 1
+  it('calls setState correctly to update tab content on tab click', () => {
+    // Click the "Usage" tab to change state
+    const usageTab = screen.getByText('Usage');
+    fireEvent.click(usageTab);
 
-    const date = new Date('2023-01-01');
-    expect(calculateMonth(date)).toBe('Jan 2023');
-  });
-
-  it('updates usageData state correctly based on tenantUsageData prop', () => {
-    const { rerender } = render(<UsageBarChart tenantUsageData={mockTenantUsageData} />);
-    act(() => {
-      rerender(<UsageBarChart tenantUsageData={mockTenantUsageData} />);
-    });
-
-    const expectedUsageData = [
-      { month: 'Jan 2023', 'Doc AI': 150, NLP: 100 },
-      { month: 'Feb 2023', 'Doc AI': 200, NLP: 150 },
-    ];
-
-    expect(screen.getByTestId('usageBarChart')).toHaveProperty('usageData', expectedUsageData);
-  });
-
-  it('renders chart elements with expected data', () => {
-    render(<UsageBarChart tenantUsageData={mockTenantUsageData} />);
-
-    expect(screen.getByText('Month-wise units for each service by a particular tenant')).toBeInTheDocument();
-    expect(screen.getByText('Jan 2023')).toBeInTheDocument();
-    expect(screen.getByText('Feb 2023')).toBeInTheDocument();
-  });
-
-  it('renders XAxis and YAxis labels with correct constants', () => {
-    render(<UsageBarChart tenantUsageData={mockTenantUsageData} />);
-
-    expect(screen.getByText(CommonConstants.STACKED_BAR_XAXIS_LABEL)).toBeInTheDocument();
-    expect(screen.getByText(CommonConstants.STACKED_BAR_YAXIS_LABEL)).toBeInTheDocument();
+    // Check if the content for "Usage" is rendered as expected
+    const usageContent = screen.getByText('How to Use'); // Adjust text as per actual content
+    expect(usageContent).toBeInTheDocument();
   });
 });
+Explanation of Test Cases
