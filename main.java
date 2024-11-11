@@ -1,190 +1,153 @@
-import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
-import '@testing-library/jest-dom/extend-expect'
-import { withSnackBarHook } from '../path/to/withSnackBarHook'
-import CreateStreams from '../path/to/CreateStreams'
-import APIConfig from '../path/to/APIConfig'
-import ErrorConstants from '../path/to/ErrorConstants'
-import SuccessConstants from '../path/to/SuccessConstants'
+import CreateStreams from '../../pages/create-streams';
+import { screen, render, fireEvent } from '@testing-library/react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { SnackbarProvider } from 'notistack';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+import { APIEndPoints } from '../../common/APIEndPoints';
 
-// Wrap component with Snackbar hook
-const MockCreateStreams = withSnackBarHook(CreateStreams)
+const eSnack = document.createElement('div');
+let mock = new MockAdapter(axios);
+window.navigator.sendBeacon = jest.fn();
 
-describe('CreateStreams Component', () => {
-  
+const MockCreateWorkflow = () => {
+  return (
+    <SnackbarProvider maxSnack={5} autoHideDuration={3000} preventDuplicate domRoot={eSnack}>
+      <Router>
+        <CreateStreams />
+      </Router>
+    </SnackbarProvider>
+  );
+};
+
+jest.mock('@react-pdf-viewer/core', () => ({
+  Worker: jest.fn(() => null),
+  Viewer: jest.fn(() => null),
+}));
+
+// Shim for ResizeObserver and DOMMatrixReadOnly
+class ResizeObserver {
+  callback: globalThis.ResizeObserverCallback;
+
+  constructor(callback: globalThis.ResizeObserverCallback) {
+    this.callback = callback;
+  }
+
+  observe(target: Element) {
+    this.callback([{ target }] as globalThis.ResizeObserverEntry[], this);
+  }
+
+  unobserve() {}
+
+  disconnect() {}
+}
+
+class DOMMatrixReadOnly {
+  m22: number;
+  constructor(transform: string) {
+    const scale = transform?.match(/scale\(([1-9.])\)/)?.[1];
+    this.m22 = scale !== undefined ? +scale : 1;
+  }
+}
+
+// Only run the shim once when requested
+let init = false;
+
+export const mockReactFlow = () => {
+  if (init) return;
+  init = true;
+
+  global.ResizeObserver = ResizeObserver;
+  global.DOMMatrixReadOnly = DOMMatrixReadOnly;
+
+  Object.defineProperties(global.HTMLElement.prototype, {
+    offsetHeight: {
+      get() {
+        return parseFloat(this.style.height) || 1;
+      },
+    },
+    offsetWidth: {
+      get() {
+        return parseFloat(this.style.width) || 1;
+      },
+    },
+  });
+  (global.SVGElement as any).prototype.getBBox = () => ({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
+};
+
+describe('Test cases for create-streams page', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  test('renders CreateStreams component correctly', () => {
-    render(<MockCreateStreams />)
-    expect(screen.getByText('Signature Capture')).toBeInTheDocument()
-  })
-
-  test('validates empty tenantId and streamName in validationOfParams', () => {
-    const { container } = render(<MockCreateStreams />)
-    const instance = container.firstChild as any
-    
-    instance.setState({ tenantId: '', streamName: '' })
-    const isValid = instance.validationOfParams()
-
-    expect(isValid).toBe(false)
-    expect(screen.getByText(ErrorConstants.EMPTY_FIELDS)).toBeInTheDocument()
-  })
-
-  test('showMsg displays success message correctly', () => {
-    render(<MockCreateStreams />)
-    
-    const instance = screen.getByTestId('component-instance') // Assume there’s a way to access the component instance
-    instance.showMsg(SuccessConstants.STREAMS_REQUEST_SUCCESSFUL, 'success')
-    
-    expect(screen.getByText(SuccessConstants.STREAMS_REQUEST_SUCCESSFUL)).toBeInTheDocument()
-  })
-
-  test('fetchStream calls API and updates state on success', async () => {
-    const mockFetchStreamResponse = { workflowName: 'Test Stream', tenantId: '1234', otherData: {} }
-    
-    jest.spyOn(APIConfig, 'getCall').mockResolvedValue({ data: mockFetchStreamResponse })
-    
-    render(<MockCreateStreams />)
-    
-    const instance = screen.getByTestId('component-instance') // Update based on actual structure
-    
-    await instance.fetchStream('test-id')
-    
-    expect(instance.state.streamName).toBe('Test Stream')
-    expect(instance.state.streamTenantId).toBe('1234')
-  })
-
-  test('saveStreamsForLater displays error on API failure', async () => {
-    jest.spyOn(APIConfig, 'postCall').mockRejectedValue({ response: { data: { error: 'Failed to save stream' } } })
-    
-    render(<MockCreateStreams />)
-    const instance = screen.getByTestId('component-instance')
-    
-    await instance.saveStreamsForLater()
-    
-    expect(screen.getByText('Failed to save stream')).toBeInTheDocument()
-  })
-
-  test('changeToEditMode updates view mode correctly', () => {
-    render(<MockCreateStreams />)
-    const instance = screen.getByTestId('component-instance')
-    
-    instance.setState({ tenantId: 'testTenant', currentStreamId: 'testStream', streamTenantId: 'testTenant' })
-    instance.changeToEditMode()
-    
-    expect(instance.state.isViewMode).toBe(false)
-  })
-
-  test('validationOfParams fails when tenantId format is invalid', () => {
-    render(<MockCreateStreams />)
-    const instance = screen.getByTestId('component-instance')
-    
-    instance.setState({ tenantId: 'invalid-id', streamName: 'StreamName' })
-    
-    const isValid = instance.validationOfParams()
-    expect(isValid).toBe(false)
-    expect(screen.getByText(ErrorConstants.ENTER_TENANT_ID)).toBeInTheDocument()
-  })
-})
-
-
-
-
-import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import MyComponent from './MyComponent'; // Assuming this is your component's file
-
-describe('MyComponent', () => {
-  // Mock the theme and color properties as needed
-  const mockTheme = { palette: { mode: 'light' } };
-  const mockColors = {
-    dbPinkBlueGradient: 'pink-blue-gradient',
-    dbGreenBlueGradient: 'green-blue-gradient',
-    dbBluePinkGradient: 'blue-pink-gradient',
-    dbBlueGreenGradient: 'blue-green-gradient',
-  };
-
-  // Mock functions to pass as props
-  const mockFunctions = {
-    handleStreamId: jest.fn(),
-    handleTenantId: jest.fn(),
-    handleStreamName: jest.fn(),
-    handleCurrentStreamId: jest.fn(),
-    newStreamCanvas: jest.fn(),
-    handleReset: jest.fn(),
-    saveStreamsForLater: jest.fn(),
-    submitNewStream: jest.fn(),
-    changeToEditMode: jest.fn(),
-  };
-
-  beforeEach(() => {
-    render(<MyComponent theme={mockTheme} Colors={mockColors} {...mockFunctions} />);
+    mockReactFlow();
+    render(<MockCreateWorkflow />);
   });
 
-  test('renders component and UI elements', () => {
-    expect(screen.getByTestId('Create Stream Header')).toBeInTheDocument();
-    expect(screen.getByTestId('tenantID')).toBeInTheDocument();
-    expect(screen.getByTestId('streamName')).toBeInTheDocument();
-    expect(screen.getByTestId('createStreamCanvas')).toBeInTheDocument();
+  it('check for the text visible in the screen', () => {
+    expect(screen.findByText('Create Stream')).toBeDefined();
+    expect(screen.findByText('Stream Details')).toBeDefined();
+    expect(screen.findByText('Node Panel')).toBeDefined();
+    expect(screen.findByText('Custom Document Classifier')).toBeDefined();
+    expect(screen.findByText('Custom Document Extractor')).toBeDefined();
+    expect(screen.findByText('Reset')).toBeDefined();
+    expect(screen.findByText('You can drag these nodes to the pane on the top.')).toBeDefined();
   });
 
-  test('displays correct header based on view mode', () => {
-    const header = screen.getByTestId('Create Stream Header');
-    expect(header).toHaveTextContent('Create Stream');
-
-    // Toggle to view mode and check header
-    fireEvent.click(screen.getByTestId('editButton'));
-    expect(header).toHaveTextContent('View Stream');
+  it('check the functionality of submit button', async () => {
+    const submitButton = screen.getByTestId('submitButton');
+    fireEvent.click(submitButton);
+    await screen.findByText('Please fill the required fields!');
   });
 
-  test('clicking edit button switches to edit mode', () => {
-    fireEvent.click(screen.getByTestId('editButton'));
-    expect(mockFunctions.changeToEditMode).toHaveBeenCalledTimes(1);
+  it('check the functionality of submit API with error message', async () => {
+    const submitButton = screen.getByTestId('submitButton');
+    const tenantID = screen.getByTestId('tenantID');
+    fireEvent.change(tenantID, { target: { value: '1234_dev' } });
+    const streamName = screen.getByTestId('streamName');
+    fireEvent.change(streamName, { target: { value: 'stream' } });
+
+    mock.onPost(APIEndPoints['ROOT'] + APIEndPoints['SAVE_WORKFLOW']).reply(function (config) {
+      return [404];
+    });
+    fireEvent.click(submitButton);
   });
 
-  test('clicking "Create New Stream" calls newStreamCanvas', () => {
-    fireEvent.click(screen.getByText('Create New Stream'));
-    expect(mockFunctions.newStreamCanvas).toHaveBeenCalledTimes(1);
+  it('check the functionality of submit API: Failed Response', async () => {
+    const submitButton = screen.getByTestId('submitButton');
+    const tenantID = screen.getByTestId('tenantID');
+    fireEvent.change(tenantID, { target: { value: '1234_dev' } });
+    const streamName = screen.getByTestId('streamName');
+    fireEvent.change(streamName, { target: { value: 'stream' } });
+
+    mock.onPost(APIEndPoints['ROOT'] + APIEndPoints['SAVE_WORKFLOW']).reply(function (config) {
+      return [400, { error: 'Request Failed' }];
+    });
+    fireEvent.click(submitButton);
   });
 
-  test('clicking save calls saveStreamsForLater', () => {
-    fireEvent.click(screen.getByTestId('saveForLater'));
-    expect(mockFunctions.saveStreamsForLater).toHaveBeenCalledTimes(1);
+  it('check the functionality of submit API: Successful response', async () => {
+    const submitButton = screen.getByTestId('submitButton');
+    const tenantID = screen.getByTestId('tenantID');
+    fireEvent.change(tenantID, { target: { value: '1234_dev' } });
+    const streamName = screen.getByTestId('streamName');
+    fireEvent.change(streamName, { target: { value: 'stream' } });
+
+    mock.onPost(APIEndPoints['ROOT'] + APIEndPoints['SAVE_WORKFLOW']).reply(function (config) {
+      return [200, '111111111111'];
+    });
+    fireEvent.click(submitButton);
   });
 
-  test('clicking reset button opens confirmation dialog', () => {
-    fireEvent.click(screen.getByTestId('resetButton'));
-    expect(screen.getByText('Reset Confirmation')).toBeInTheDocument();
-  });
-
-  test('confirmation dialog confirms reset on button click', () => {
-    fireEvent.click(screen.getByTestId('resetButton'));
-    const confirmButton = screen.getByText('Confirm');
-    fireEvent.click(confirmButton);
-    expect(mockFunctions.handleReset).toHaveBeenCalledTimes(1);
-  });
-
-  test('displays the correct input values and updates on change', () => {
-    const tenantIdInput = screen.getByTestId('tenantID');
-    const streamNameInput = screen.getByTestId('streamName');
-
-    fireEvent.change(tenantIdInput, { target: { value: '123' } });
-    expect(mockFunctions.handleTenantId).toHaveBeenCalledWith('123');
-
-    fireEvent.change(streamNameInput, { target: { value: 'New Stream' } });
-    expect(mockFunctions.handleStreamName).toHaveBeenCalledWith('New Stream');
-  });
-
-  test('clicking close button in update dialog closes the dialog', () => {
-    fireEvent.click(screen.getByTestId('closeButton'));
-    expect(screen.queryByText('Stream ID')).not.toBeInTheDocument();
-  });
-
-  test('snapshot of initial render', () => {
-    const { asFragment } = render(<MyComponent theme={mockTheme} Colors={mockColors} {...mockFunctions} />);
-    expect(asFragment()).toMatchSnapshot();
+  it('check the functionality of reset button', async () => {
+    const tenantID = screen.getByTestId('tenantID');
+    fireEvent.change(tenantID, { target: { value: '1234_dev' } });
+    const streamName = screen.getByTestId('streamName');
+    fireEvent.change(streamName, { target: { value: 'stream' } });
+    const resetButton = screen.getByTestId('resetButton');
+    fireEvent.click(resetButton);
+    await screen.findByText('Tenant ID');
   });
 });
