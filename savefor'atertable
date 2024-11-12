@@ -1,3 +1,71 @@
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import CopyButton from './CopyButton'
+import '@testing-library/jest-dom'
+import { Tooltip, IconButton, Dialog } from '@mui/material'
+
+// Mocking the clipboard API
+Object.assign(navigator, {
+  clipboard: {
+    writeText: jest.fn(),
+  },
+})
+
+describe('CopyButton Component', () => {
+  it('renders CopyAllIcon initially', () => {
+    render(<CopyButton contentToCopy="Sample text" title="Copy this content" text="Alert Dialog Title" />)
+    
+    // Check that CopyAllIcon is rendered initially
+    const copyButton = screen.getByTestId('CopyGcsUri')
+    expect(copyButton).toBeInTheDocument()
+  })
+
+  it('copies content to clipboard, shows DoneIcon, and opens dialog', async () => {
+    render(<CopyButton contentToCopy="Sample text" title="Copy this content" text="Alert Dialog Title" />)
+    
+    const copyButton = screen.getByTestId('CopyGcsUri')
+
+    // Simulate a click event to copy content
+    fireEvent.click(copyButton)
+
+    // Check that the clipboard writeText function was called with the correct content
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Sample text')
+
+    // Verify that the DoneIcon is shown after clicking
+    const doneIconButton = await screen.findByTestId('CopyGcsUriDoneIconButton')
+    expect(doneIconButton).toBeInTheDocument()
+
+    // Verify that the dialog is open with the correct title and content
+    const dialogTitle = screen.getByText('Alert Dialog Title')
+    const dialogContent = screen.getByText('Sample text')
+    expect(dialogTitle).toBeInTheDocument()
+    expect(dialogContent).toBeInTheDocument()
+  })
+
+  it('closes dialog when handleIsCopyClicked is triggered', async () => {
+    render(<CopyButton contentToCopy="Sample text" title="Copy this content" text="Alert Dialog Title" />)
+    
+    const copyButton = screen.getByTestId('CopyGcsUri')
+    fireEvent.click(copyButton)
+
+    // Verify that the dialog is open
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toBeInTheDocument()
+
+    // Simulate closing the dialog
+    const closeButton = screen.getByRole('button', { name: 'Close' })
+    fireEvent.click(closeButton)
+
+    // Wait for dialog to close
+    await waitFor(() => expect(dialog).not.toBeInTheDocument())
+  })
+})
+
+
+
+
+
+
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PermanentDrawerLeftWorkflow from './PermanentDrawerLeftWorkflow';
