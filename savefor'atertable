@@ -1,3 +1,70 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import LinesChart from './LinesChart'; // Path to your LinesChart component
+import '@testing-library/jest-dom';
+import { CommonConstants } from '../common/CommonConstants'; // Path to your CommonConstants
+import { ChartColorConstant } from '../common/constants/ColorConstants'; // Path to ColorConstants
+
+jest.mock('../assets/lineschartData.json', () => ({
+  data: [
+    { name: 'Page A', uv: 4000, pv: 2400, amt: 2400 },
+    { name: 'Page B', uv: 3000, pv: 1398, amt: 2210 },
+    { name: 'Page C', uv: 2000, pv: 9800, amt: 2290 },
+    { name: 'Page D', uv: 2780, pv: 3908, amt: 2000 },
+  ],
+}));
+
+describe('LinesChart Component', () => {
+  it('should render the chart correctly with data', async () => {
+    render(<LinesChart />);
+
+    // Wait for the chart to load and verify that the chart components are rendered
+    await waitFor(() => {
+      expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+      expect(screen.getByTestId('line-chart').children.length).toBeGreaterThan(0);
+    });
+
+    // Check that the chart has the correct components like XAxis, YAxis, etc.
+    expect(screen.getByTestId('x-axis')).toBeInTheDocument();
+    expect(screen.getByTestId('y-axis')).toBeInTheDocument();
+    expect(screen.getByTestId('line')).toBeInTheDocument();
+  });
+
+  it('should render an empty chart when no data is provided', async () => {
+    // Mocking an empty data response
+    jest.mock('../assets/lineschartData.json', () => ({
+      data: [],
+    }));
+
+    render(<LinesChart />);
+
+    // Check that the chart is rendered but without any lines
+    await waitFor(() => {
+      expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+      expect(screen.getByTestId('line-chart').children.length).toBe(0);
+    });
+  });
+
+  it('should call the correct constants for chart dimensions', () => {
+    render(<LinesChart />);
+
+    // Check if the width and height are set from the CommonConstants
+    const chartContainer = screen.getByTestId('line-chart');
+    expect(chartContainer).toHaveStyle(`width: ${CommonConstants.LINE_CHART_WIDTH}`);
+    expect(chartContainer).toHaveStyle(`height: ${CommonConstants.LINE_CHART_HEIGHT}`);
+  });
+
+  it('should render the chart correctly when data is loaded asynchronously', async () => {
+    render(<LinesChart />);
+
+    // Wait for the chart to be populated with data
+    await waitFor(() => {
+      expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+    });
+
+    // Check that the chart has the right number of lines based on the mock data
+    expect(screen.getAllByTestId('line')).toHaveLength(3); // Assuming 3 lines for 3 properties: uv, pv, amt
+  });
+});
 import { render, screen, fireEvent } from '@testing-library/react';
 import SimpleAccordion from './SimpleAccordion';
 import '@testing-library/jest-dom';
