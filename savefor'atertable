@@ -1,3 +1,46 @@
+
+import { render, screen, fireEvent } from '@testing-library/react';
+import Clippy from './Clippy'; // Path to your Clippy component
+import '@testing-library/jest-dom';
+
+describe('Clippy Component', () => {
+  it('sets isHelpNeeded to true when the icon button is clicked', () => {
+    render(<Clippy />);
+
+    // Verify the initial state is not in help mode
+    expect(screen.queryByText(/Hello There,/i)).toBeNull();
+
+    // Find the clippy icon button and click it
+    const iconButton = screen.getByRole('button');
+    fireEvent.click(iconButton);
+
+    // After the click, the "Hello There" text should be visible (help mode is active)
+    expect(screen.getByText(/Hello There,/i)).toBeInTheDocument();
+  });
+
+  it('sets isHelpNeeded to false when the close icon button is clicked', () => {
+    render(<Clippy />);
+
+    // Click the Clippy icon to open help
+    const iconButton = screen.getByRole('button');
+    fireEvent.click(iconButton);
+
+    // Ensure the help section is visible
+    expect(screen.getByText(/Hello There,/i)).toBeInTheDocument();
+
+    // Now find the close button and click it
+    const closeButton = screen.getByLabelText('close');
+    fireEvent.click(closeButton);
+
+    // After clicking the close button, the help section should be hidden again
+    expect(screen.queryByText(/Hello There,/i)).toBeNull();
+  });
+});
+
+
+
+
+
 import { render, screen, fireEvent } from '@testing-library/react'
 import DisplayCards from './DisplayCards'
 import '@testing-library/jest-dom'
