@@ -1,769 +1,106 @@
-
-import { render, screen, fireEvent } from '@testing-library/react';
-import Clippy from './Clippy'; // Path to your Clippy component
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import FileTableView from './FileTableView'; // Path to your component
 import '@testing-library/jest-dom';
+import { TablePaginationActionsProps } from './TablePaginationActions'; // Path to TablePaginationActions if needed
 
-describe('Clippy Component', () => {
-  it('sets isHelpNeeded to true when the icon button is clicked', () => {
-    render(<Clippy />);
+const mockSetCurrentPage = jest.fn();
+const mockSetCheckedFiles = jest.fn();
+const mockSetIsAllFilesChecked = jest.fn();
+const mockCheckedHandleToggle = jest.fn();
+const mockOnClickFileFunctionality = jest.fn();
+const mockFileList = [
+  { fileName: 'file1.txt', filePath: 'path/to/file1.txt', fileType: 'file' },
+  { fileName: 'folder1/', filePath: 'path/to/folder1/', fileType: 'folder' },
+];
+const mockProps = {
+  optionVisibility: {},
+  modalVisibility: {},
+  fileList: mockFileList,
+  onClickFileFunctionality: mockOnClickFileFunctionality,
+  checkedFiles: [],
+  checkedHandleToggle: mockCheckedHandleToggle,
+  parentDirectorySetter: jest.fn(),
+  fetchAndUpdateFileList: jest.fn(),
+  setCheckedFiles: mockSetCheckedFiles,
+  currentPage: 0,
+  setCurrentPage: mockSetCurrentPage,
+  isAllFilesChecked: false,
+  setIsAllFilesChecked: mockSetIsAllFilesChecked,
+};
 
-    // Verify the initial state is not in help mode
-    expect(screen.queryByText(/Hello There,/i)).toBeNull();
-
-    // Find the clippy icon button and click it
-    const iconButton = screen.getByRole('button');
-    fireEvent.click(iconButton);
-
-    // After the click, the "Hello There" text should be visible (help mode is active)
-    expect(screen.getByText(/Hello There,/i)).toBeInTheDocument();
+describe('FileTableView Component', () => {
+  it('should render file list correctly', () => {
+    render(<FileTableView {...mockProps} />);
+    expect(screen.getByText('file1.txt')).toBeInTheDocument();
+    expect(screen.getByText('folder1/')).toBeInTheDocument();
   });
 
-  it('sets isHelpNeeded to false when the close icon button is clicked', () => {
-    render(<Clippy />);
+  it('should toggle select all checkbox correctly', () => {
+    render(<FileTableView {...mockProps} />);
 
-    // Click the Clippy icon to open help
-    const iconButton = screen.getByRole('button');
-    fireEvent.click(iconButton);
+    // Check that the checkbox is not checked initially
+    expect(screen.getByTestId('fileTableViewCheckbox')).not.toBeChecked();
 
-    // Ensure the help section is visible
-    expect(screen.getByText(/Hello There,/i)).toBeInTheDocument();
+    // Simulate checking the "select all" checkbox
+    fireEvent.click(screen.getByTestId('fileTableViewCheckbox'));
 
-    // Now find the close button and click it
-    const closeButton = screen.getByLabelText('close');
-    fireEvent.click(closeButton);
+    // Check that the checkbox is now checked
+    expect(mockSetCheckedFiles).toHaveBeenCalled();
+    expect(mockSetIsAllFilesChecked).toHaveBeenCalledWith(true);
+  });
 
-    // After clicking the close button, the help section should be hidden again
-    expect(screen.queryByText(/Hello There,/i)).toBeNull();
+  it('should handle page changes correctly when using pagination', () => {
+    render(<FileTableView {...mockProps} />);
+    
+    // Mock for the pagination buttons
+    const nextPageButton = screen.getByLabelText('next page');
+    fireEvent.click(nextPageButton);
+    
+    // Check if setCurrentPage was called with the correct value
+    expect(mockSetCurrentPage).toHaveBeenCalledWith(1);
+  });
+
+  it('should handle rows per page change correctly', () => {
+    render(<FileTableView {...mockProps} />);
+    
+    // Change the rows per page
+    fireEvent.change(screen.getByLabelText('Files per page'), { target: { value: 10 } });
+    
+    // Check if the rows per page value has been updated
+    expect(screen.getByLabelText('Files per page').value).toBe('10');
+  });
+
+  it('should render the download status indicator correctly', () => {
+    render(<FileTableView {...mockProps} />);
+
+    // Check if the download indicator is displayed for files in the download list
+    const rotatingIcon = screen.queryByTestId('rotating-icon');
+    expect(rotatingIcon).toBeNull(); // Assuming it's not in the list
+  });
+  
+  it('should call the file click handler when a file is clicked', () => {
+    render(<FileTableView {...mockProps} />);
+
+    const fileButton = screen.getByText('file1.txt');
+    fireEvent.click(fileButton);
+
+    expect(mockOnClickFileFunctionality).toHaveBeenCalledWith(mockFileList[0]);
+  });
+
+  it('should disable pagination buttons when necessary', () => {
+    render(<FileTableView {...mockProps} />);
+    
+    // Assuming the page is 0, the "First" and "Previous" buttons should be disabled
+    const firstPageButton = screen.getByLabelText('first page');
+    const previousPageButton = screen.getByLabelText('previous page');
+    expect(firstPageButton).toBeDisabled();
+    expect(previousPageButton).toBeDisabled();
+  });
+
+  it('should render folder icon for folder files', () => {
+    render(<FileTableView {...mockProps} />);
+
+    const folderIcon = screen.getByTestId('folder-icon');
+    expect(folderIcon).toBeInTheDocument();
   });
 });
-
-
-
-
-
-import { render, screen, fireEvent } from '@testing-library/react'
-import DisplayCards from './DisplayCards'
-import '@testing-library/jest-dom'
-import { Box, Container, Grid, OutlinedInput, InputAdornment, IconButton, Typography } from '@mui/material'
-import SearchIcon from '@mui/icons-material/Search'
-
-// Mock ProcessorCard component
-jest.mock('./ProcessorCard', () => {
-  return ({ data }) => <div>{data.displayName}</div>
-})
-
-const sampleProcessors = [
-  { displayName: 'Processor 1', id: 1 },
-  { displayName: 'Processor 2', id: 2 },
-  { displayName: 'Processor 3', id: 3 },
-]
-
-describe('DisplayCards Component', () => {
-  it('renders loading text when cardData is empty', () => {
-    render(<DisplayCards cardData={[]} />)
-
-    // Check if the loading text is shown
-    expect(screen.getByText(/Loading Processors../i)).toBeInTheDocument()
-  })
-
-  it('displays ProcessorCard components when cardData is provided', () => {
-    render(<DisplayCards cardData={sampleProcessors} />)
-
-    // Check if the ProcessorCard components are rendered
-    expect(screen.getByText('Processor 1')).toBeInTheDocument()
-    expect(screen.getByText('Processor 2')).toBeInTheDocument()
-    expect(screen.getByText('Processor 3')).toBeInTheDocument()
-  })
-
-  it('filters cards based on search term', () => {
-    render(<DisplayCards cardData={sampleProcessors} />)
-
-    // Find the search input and simulate typing
-    const searchInput = screen.getByTestId('searchInput')
-    fireEvent.change(searchInput, { target: { value: 'Processor 1' } })
-
-    // Check that only the filtered card is displayed
-    expect(screen.getByText('Processor 1')).toBeInTheDocument()
-    expect(screen.queryByText('Processor 2')).not.toBeInTheDocument()
-    expect(screen.queryByText('Processor 3')).not.toBeInTheDocument()
-  })
-
-  it('displays all cards when search term is cleared', () => {
-    render(<DisplayCards cardData={sampleProcessors} />)
-
-    const searchInput = screen.getByTestId('searchInput')
-    fireEvent.change(searchInput, { target: { value: 'Processor 1' } })
-
-    // Clear the search term
-    fireEvent.change(searchInput, { target: { value: '' } })
-
-    // Check if all cards are displayed
-    expect(screen.getByText('Processor 1')).toBeInTheDocument()
-    expect(screen.getByText('Processor 2')).toBeInTheDocument()
-    expect(screen.getByText('Processor 3')).toBeInTheDocument()
-  })
-
-  it('shows no processors when no processor matches search', () => {
-    render(<DisplayCards cardData={sampleProcessors} />)
-
-    const searchInput = screen.getByTestId('searchInput')
-    fireEvent.change(searchInput, { target: { value: 'Nonexistent Processor' } })
-
-    // Check that no ProcessorCards are displayed
-    expect(screen.queryByText('Processor 1')).not.toBeInTheDocument()
-    expect(screen.queryByText('Processor 2')).not.toBeInTheDocument()
-    expect(screen.queryByText('Processor 3')).not.toBeInTheDocument()
-  })
-})
-
-
-
-
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import CopyButton from './CopyButton'
-import '@testing-library/jest-dom'
-
-// Mock the clipboard API
-Object.assign(navigator, {
-  clipboard: {
-    writeText: jest.fn(),
-  },
-})
-
-describe('CopyButton Component', () => {
-  beforeEach(() => {
-    // Clear any previous calls to the mock
-    navigator.clipboard.writeText.mockClear()
-  })
-
-  it('renders CopyAllIcon initially', () => {
-    render(<CopyButton contentToCopy="Sample text" title="Copy this content" text="Alert Dialog Title" />)
-    
-    // Check that CopyAllIcon is rendered initially
-    const copyButton = screen.getByTestId('CopyGcsUri')
-    expect(copyButton).toBeInTheDocument()
-  })
-
-  it('copies content to clipboard, shows DoneIcon, and opens dialog', async () => {
-    render(<CopyButton contentToCopy="Sample text" title="Copy this content" text="Alert Dialog Title" />)
-    
-    const copyButton = screen.getByTestId('CopyGcsUri')
-
-    // Simulate a click event to copy content
-    fireEvent.click(copyButton)
-
-    // Ensure the clipboard writeText function was called with the correct content
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Sample text')
-    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1)
-
-    // Verify that the DoneIcon is shown after clicking
-    const doneIconButton = await screen.findByTestId('CopyGcsUriDoneIconButton')
-    expect(doneIconButton).toBeInTheDocument()
-
-    // Verify that the dialog is open with the correct title and content
-    const dialogTitle = screen.getByText('Alert Dialog Title')
-    const dialogContent = screen.getByText('Sample text')
-    expect(dialogTitle).toBeInTheDocument()
-    expect(dialogContent).toBeInTheDocument()
-  })
-
-  it('closes dialog when handleIsCopyClicked is triggered', async () => {
-    render(<CopyButton contentToCopy="Sample text" title="Copy this content" text="Alert Dialog Title" />)
-    
-    const copyButton = screen.getByTestId('CopyGcsUri')
-    fireEvent.click(copyButton)
-
-    // Verify that the dialog is open
-    const dialog = screen.getByRole('dialog')
-    expect(dialog).toBeInTheDocument()
-
-    // Simulate closing the dialog
-    const closeButton = screen.getByRole('button', { name: 'Close' })
-    fireEvent.click(closeButton)
-
-    // Wait for dialog to close
-    await waitFor(() => expect(dialog).not.toBeInTheDocument())
-  })
-})
-
-
-
-
-
-
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import CopyButton from './CopyButton'
-import '@testing-library/jest-dom'
-import { Tooltip, IconButton, Dialog } from '@mui/material'
-
-// Mocking the clipboard API
-Object.assign(navigator, {
-  clipboard: {
-    writeText: jest.fn(),
-  },
-})
-
-describe('CopyButton Component', () => {
-  it('renders CopyAllIcon initially', () => {
-    render(<CopyButton contentToCopy="Sample text" title="Copy this content" text="Alert Dialog Title" />)
-    
-    // Check that CopyAllIcon is rendered initially
-    const copyButton = screen.getByTestId('CopyGcsUri')
-    expect(copyButton).toBeInTheDocument()
-  })
-
-  it('copies content to clipboard, shows DoneIcon, and opens dialog', async () => {
-    render(<CopyButton contentToCopy="Sample text" title="Copy this content" text="Alert Dialog Title" />)
-    
-    const copyButton = screen.getByTestId('CopyGcsUri')
-
-    // Simulate a click event to copy content
-    fireEvent.click(copyButton)
-
-    // Check that the clipboard writeText function was called with the correct content
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Sample text')
-
-    // Verify that the DoneIcon is shown after clicking
-    const doneIconButton = await screen.findByTestId('CopyGcsUriDoneIconButton')
-    expect(doneIconButton).toBeInTheDocument()
-
-    // Verify that the dialog is open with the correct title and content
-    const dialogTitle = screen.getByText('Alert Dialog Title')
-    const dialogContent = screen.getByText('Sample text')
-    expect(dialogTitle).toBeInTheDocument()
-    expect(dialogContent).toBeInTheDocument()
-  })
-
-  it('closes dialog when handleIsCopyClicked is triggered', async () => {
-    render(<CopyButton contentToCopy="Sample text" title="Copy this content" text="Alert Dialog Title" />)
-    
-    const copyButton = screen.getByTestId('CopyGcsUri')
-    fireEvent.click(copyButton)
-
-    // Verify that the dialog is open
-    const dialog = screen.getByRole('dialog')
-    expect(dialog).toBeInTheDocument()
-
-    // Simulate closing the dialog
-    const closeButton = screen.getByRole('button', { name: 'Close' })
-    fireEvent.click(closeButton)
-
-    // Wait for dialog to close
-    await waitFor(() => expect(dialog).not.toBeInTheDocument())
-  })
-})
-
-
-
-
-
-
-
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import PermanentDrawerLeftWorkflow from './PermanentDrawerLeftWorkflow';
-import * as api from './api'; // Mock this file for API calls
-import { SnackbarProvider } from 'notistack';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-
-jest.mock('./api', () => ({
-  fetchProcessors: jest.fn(),
-  fetchVersions: jest.fn(),
-}));
-
-const theme = createTheme();
-const MockComponent = (props: any) => (
-  <ThemeProvider theme={theme}>
-    <SnackbarProvider>
-      <PermanentDrawerLeftWorkflow {...props} />
-    </SnackbarProvider>
-  </ThemeProvider>
-);
-
-describe('PermanentDrawerLeftWorkflow', () => {
-  const mockProps = {
-    drawerFlag: true,
-    nodeProperties: { displayName: 'Processor A', processorId: '123', versionId: 'v1' },
-    nodeTypeOfSelectedNode: 'Document',
-    handleNodeProperties: jest.fn(),
-    handleDrawerFlag: jest.fn(),
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test('should fetch processors list on mount when drawerFlag is true', async () => {
-    (api.fetchProcessors as jest.Mock).mockResolvedValue({
-      status: 'SUCCESS',
-      response: [{ displayName: 'Processor A', processorId: '123' }],
-    });
-
-    render(<MockComponent {...mockProps} />);
-
-    await waitFor(() => {
-      expect(api.fetchProcessors).toHaveBeenCalled();
-    });
-
-    expect(screen.getByDisplayValue('Processor A')).toBeInTheDocument();
-  });
-
-  test('should set processorId when processorName changes', async () => {
-    (api.fetchProcessors as jest.Mock).mockResolvedValue({
-      status: 'SUCCESS',
-      response: [{ displayName: 'Processor B', processorId: '456' }],
-    });
-
-    render(<MockComponent {...mockProps} />);
-
-    await waitFor(() => {
-      expect(api.fetchProcessors).toHaveBeenCalled();
-    });
-
-    fireEvent.change(screen.getByLabelText('Processor Name'), { target: { value: 'Processor B' } });
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('Processor B')).toBeInTheDocument();
-    });
-  });
-
-  test('should fetch versions list when processorId changes', async () => {
-    (api.fetchProcessors as jest.Mock).mockResolvedValue({
-      status: 'SUCCESS',
-      response: [{ displayName: 'Processor A', processorId: '123' }],
-    });
-    (api.fetchVersions as jest.Mock).mockResolvedValue({
-      status: 'SUCCESS',
-      response: [{ versionId: 'v2' }],
-    });
-
-    render(<MockComponent {...mockProps} />);
-
-    await waitFor(() => {
-      expect(api.fetchProcessors).toHaveBeenCalled();
-    });
-
-    fireEvent.change(screen.getByLabelText('Processor Name'), { target: { value: 'Processor A' } });
-    await waitFor(() => {
-      expect(api.fetchVersions).toHaveBeenCalledWith('123');
-    });
-  });
-
-  test('should show error message on API failure', async () => {
-    (api.fetchProcessors as jest.Mock).mockRejectedValue({ detail: 'Error fetching processors' });
-
-    render(<MockComponent {...mockProps} />);
-
-    await waitFor(() => {
-      expect(api.fetchProcessors).toHaveBeenCalled();
-    });
-
-    expect(screen.getByText('Error fetching processors')).toBeInTheDocument();
-  });
-
-  test('should update node properties on save button click', () => {
-    render(<MockComponent {...mockProps} />);
-
-    fireEvent.click(screen.getByText('Save'));
-
-    expect(mockProps.handleNodeProperties).toHaveBeenCalledWith({
-      processorId: '123',
-      displayName: 'Processor A',
-      type: 'Doc AI',
-      versionId: 'v1',
-      category: 'Document',
-    });
-  });
-
-  test('should reset states and close drawer on handleClick', () => {
-    render(<MockComponent {...mockProps} />);
-
-    fireEvent.click(screen.getByText('Close'));
-
-    expect(mockProps.handleDrawerFlag).toHaveBeenCalledWith(false);
-    expect(screen.queryByDisplayValue('Processor A')).not.toBeInTheDocument();
-  });
-
-  test('should handle error and close error message on close', () => {
-    (api.fetchProcessors as jest.Mock).mockRejectedValue({ detail: 'Error fetching processors' });
-
-    render(<MockComponent {...mockProps} />);
-
-    waitFor(() => {
-      expect(screen.getByText('Error fetching processors')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByLabelText('Close Error'));
-
-    expect(screen.queryByText('Error fetching processors')).not.toBeInTheDocument();
-  });
-});
-
-
-
-
-
-
-
-
-
-
-
-
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import MyDocSplitters from '../../pages/my-doc-splitters';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { SnackbarProvider } from 'notistack';
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Colors } from '../../common/constants/ColorConstants';
-
-// Mock @react-pdf-viewer/core
-jest.mock('@react-pdf-viewer/core', () => ({
-  Worker: jest.fn(() => null),
-  Viewer: jest.fn(() => null),
-}));
-
-// Mock enqueueSnackbar from notistack
-const mockEnqueueSnackbar = jest.fn();
-
-jest.mock('notistack', () => ({
-  ...jest.requireActual('notistack'),
-  useSnackbar: () => ({
-    enqueueSnackbar: mockEnqueueSnackbar,
-  }),
-}));
-
-// Initialize axios mock
-const mockAxios = new MockAdapter(axios);
-
-// Define a theme if necessary
-const theme = createTheme();
-
-// Mock Component Wrapper
-const MockMyDocSplitters = (props: any) => (
-  <ThemeProvider theme={theme}>
-    <SnackbarProvider maxSnack={5} autoHideDuration={3000} preventDuplicate>
-      <Router>
-        <MyDocSplitters {...props} />
-      </Router>
-    </SnackbarProvider>
-  </ThemeProvider>
-);
-
-describe('MyDocSplitters Component Tests', () => {
-  const mockHandleNodeProperties = jest.fn();
-  const mockHandleDrawerFlag = jest.fn();
-
-  beforeEach(() => {
-    mockAxios.reset();
-    jest.clearAllMocks();
-  });
-
-  // Helper to render the component with default props
-  const renderComponent = (props = {}) => {
-    return render(
-      <MockMyDocSplitters
-        {...props}
-        handleNodeProperties={mockHandleNodeProperties}
-        handleDrawerFlag={mockHandleDrawerFlag}
-      />
-    );
-  };
-
-  it('renders the header and drawer', () => {
-    renderComponent();
-
-    expect(screen.getByText('My Document Splitters')).toBeInTheDocument();
-    expect(screen.getByText('Search')).toBeInTheDocument();
-    expect(screen.getByText('Create new Splitter')).toBeInTheDocument();
-  });
-
-  it('sets tenantId state correctly when setTenantId is called', () => {
-    renderComponent();
-
-    // Find the tenantId input field, assume it has label 'Tenant ID'
-    const tenantIdInput = screen.getByLabelText('Tenant ID');
-    fireEvent.change(tenantIdInput, { target: { value: 'tenant123' } });
-
-    // Verify that the input value has changed
-    expect(tenantIdInput.value).toBe('tenant123');
-  });
-
-  it('sets tenantId and searchState states when onSearchHandler is called', async () => {
-    renderComponent();
-
-    // Find the tenantId input field and enter tenant ID
-    const tenantIdInput = screen.getByLabelText('Tenant ID');
-    fireEvent.change(tenantIdInput, { target: { value: 'tenant123' } });
-
-    // Find and click the search button
-    const searchButton = screen.getByRole('button', { name: /search/i });
-    fireEvent.click(searchButton);
-
-    // Assuming that search triggers a state change which may show some results or reset the page
-    // For example, a loading spinner appears when searchState is true
-    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
-
-    // Optionally, mock the API response for search and verify results
-  });
-
-  it('sets searchState state correctly when setSearchState is called via onSearchHandler', () => {
-    renderComponent();
-
-    // Find the tenantId input field and enter tenant ID
-    const tenantIdInput = screen.getByLabelText('Tenant ID');
-    fireEvent.change(tenantIdInput, { target: { value: 'tenant123' } });
-
-    // Find and click the search button
-    const searchButton = screen.getByRole('button', { name: /search/i });
-    fireEvent.click(searchButton);
-
-    // After clicking search, check if loading spinner is shown indicating searchState is true
-    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
-  });
-
-  it('opens confirmation dialog when onClickDelete is called', () => {
-    renderComponent();
-
-    // Assume that there is a delete button for a processor with text 'Delete'
-    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-    expect(deleteButtons.length).toBeGreaterThan(0);
-
-    // Click the first delete button
-    fireEvent.click(deleteButtons[0]);
-
-    // Now, the confirmation dialog should appear
-    expect(screen.getByText('Are you sure you want to delete this processor?')).toBeInTheDocument();
-  });
-
-  it('closes confirmation dialog when handleDeleteDialogClose is called', () => {
-    renderComponent();
-
-    // Click a delete button to open the dialog
-    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-    fireEvent.click(deleteButtons[0]);
-
-    // Now, the confirmation dialog should appear
-    expect(screen.getByText('Are you sure you want to delete this processor?')).toBeInTheDocument();
-
-    // Click the 'Cancel' button to close the dialog
-    const cancelButton = screen.getByRole('button', { name: /cancel/i });
-    fireEvent.click(cancelButton);
-
-    // The dialog should be closed
-    expect(screen.queryByText('Are you sure you want to delete this processor?')).not.toBeInTheDocument();
-  });
-
-  it('sets processorIdToDelete state correctly when onClickDelete is called', () => {
-    renderComponent();
-
-    // Click a delete button to open the dialog
-    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-    fireEvent.click(deleteButtons[0]);
-
-    // Assume that the processor ID is passed via the delete button's data attribute or accessible name
-    // For this example, let's assume the processor ID is embedded in the button's value
-    // Alternatively, you might need to mock the state change through UI updates
-
-    // Click the confirm delete button
-    const confirmDeleteButton = screen.getByRole('button', { name: /confirm/i });
-    fireEvent.click(confirmDeleteButton);
-
-    // Wait for the API call to complete and state to update (refresh to true)
-    waitFor(() => {
-      expect(mockHandleDrawerFlag).toHaveBeenCalledWith(false);
-    });
-  });
-
-  it('toggles refresh state when refresh method is called', async () => {
-    renderComponent();
-
-    // Assume there is a refresh button
-    const refreshButton = screen.getByRole('button', { name: /refresh/i });
-    fireEvent.click(refreshButton);
-
-    // Verify that refresh state toggles, perhaps by checking if some element is reloaded or updated
-    // For example, a loading spinner appears
-    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
-
-    // Click refresh again
-    fireEvent.click(refreshButton);
-
-    // Verify that the loading spinner is shown again
-    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
-  });
-
-  it('sets textFieldState correctly when updating textFieldState', () => {
-    renderComponent();
-
-    // Find the text field for input, assume it has label 'Search'
-    const textField = screen.getByLabelText('Search');
-    fireEvent.change(textField, { target: { value: 'new text' } });
-
-    // Verify that the text field value has been updated
-    expect(textField.value).toBe('new text');
-  });
-
-  it('calls splitterToDelete and updates state on delete confirmation', async () => {
-    // Mock the delete API call to succeed
-    mockAxios.onDelete(APIEndPoints.ROOT + 'textract/documentSplitter/deleteProcessor').reply(200);
-
-    renderComponent();
-
-    // Click a delete button to open the dialog
-    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-    fireEvent.click(deleteButtons[0]);
-
-    // Click the confirm delete button
-    const confirmDeleteButton = screen.getByRole('button', { name: /confirm/i });
-    fireEvent.click(confirmDeleteButton);
-
-    // Wait for the API call to be made and refresh to be triggered
-    await waitFor(() => {
-      expect(mockHandleDrawerFlag).toHaveBeenCalledWith(false);
-    });
-
-    // Optionally, verify that no error snackbar is shown
-    expect(mockEnqueueSnackbar).not.toHaveBeenCalled();
-  });
-
-  it('shows error snackbar on splitterToDelete failure', async () => {
-    // Mock the delete API call to fail
-    mockAxios.onDelete(APIEndPoints.ROOT + 'textract/documentSplitter/deleteProcessor').reply(500, { message: 'Deletion failed' });
-
-    renderComponent();
-
-    // Click a delete button to open the dialog
-    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-    fireEvent.click(deleteButtons[0]);
-
-    // Click the confirm delete button
-    const confirmDeleteButton = screen.getByRole('button', { name: /confirm/i });
-    fireEvent.click(confirmDeleteButton);
-
-    // Wait for the API call and error handling
-    await waitFor(() => {
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Deletion failed', { variant: 'error' });
-    });
-  });
-
-  it('updates processorId when processorName changes', async () => {
-    // Mock fetchProcessors API call
-    mockAxios.onGet(APIEndPoints.ROOT + 'textract/documentSplitter/getProcessors').reply(200, {
-      status: 'SUCCESS',
-      response: [
-        { displayName: 'Processor A', processorId: 'procA' },
-        { displayName: 'Processor B', processorId: 'procB' },
-      ],
-    });
-
-    // Mock fetchVersions API call
-    mockAxios.onGet(APIEndPoints.ROOT + 'textract/documentSplitter/getVersions').reply(200, {
-      status: 'SUCCESS',
-      response: [
-        { versionId: 'v1' },
-        { versionId: 'v2' },
-      ],
-    });
-
-    renderComponent();
-
-    // Wait for processors to be fetched and rendered
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('Processor A')).toBeInTheDocument();
-    });
-
-    // Change the processor name to 'Processor B'
-    const processorSelect = screen.getByLabelText('Processor Name'); // Assume it's a select element
-    fireEvent.change(processorSelect, { target: { value: 'Processor B' } });
-
-    // Wait for processorId to update
-    await waitFor(() => {
-      expect(mockHandleNodeProperties).not.toHaveBeenCalled();
-      // Verify that the versionId is updated based on the selected processor
-      const versionSelect = screen.getByLabelText('Version ID'); // Assume it's a select element
-      expect(versionSelect.value).toBe('v1'); // or the first versionId of Processor B
-    });
-  });
-
-  it('handles save button click and updates node properties', () => {
-    renderComponent();
-
-    // Assume there is a save button labeled 'Save'
-    const saveButton = screen.getByRole('button', { name: /save/i });
-    fireEvent.click(saveButton);
-
-    // Verify that handleNodeProperties was called with the correct data
-    expect(mockHandleNodeProperties).toHaveBeenCalledWith({
-      processorId: '',
-      displayName: '',
-      type: 'Doc AI',
-      versionId: '',
-      category: '',
-    });
-  });
-
-  it('resets states and closes drawer on handleClick', () => {
-    renderComponent();
-
-    // Assume there is a close button labeled 'Close'
-    const closeButton = screen.getByRole('button', { name: /close/i });
-    fireEvent.click(closeButton);
-
-    // Verify that handleDrawerFlag was called to close the drawer
-    expect(mockHandleDrawerFlag).toHaveBeenCalledWith(false);
-
-    // Optionally, verify that certain state-dependent UI elements are reset
-    // For example, processor name and ID are cleared
-    expect(screen.queryByDisplayValue('Processor A')).not.toBeInTheDocument();
-  });
-
-
-
-
-
-
-
-});
-
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import CopyAllButton from './CopyAllButton'
-import '@testing-library/jest-dom'
-
-// Mocking the clipboard API
-Object.assign(navigator, {
-  clipboard: {
-    writeText: jest.fn(),
-  },
-})
-
-describe('CopyAllButton Component', () => {
-  it('renders CopyAllIcon initially', () => {
-    render(<CopyAllButton contentToCopy="Sample text" title="Copy this content" />)
-    
-    // Check that CopyAllIcon is rendered initially
-    const copyButton = screen.getByTestId('CopyContent')
-    expect(copyButton).toBeInTheDocument()
-  })
-
-  it('copies content to clipboard and shows DoneIcon', async () => {
-    render(<CopyAllButton contentToCopy="Sample text" title="Copy this content" />)
-    
-    const copyButton = screen.getByTestId('CopyContent')
-
-    // Simulate a click event to copy content
-    fireEvent.click(copyButton)
-
-    // Check that the clipboard writeText function was called with the correct content
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Sample text')
-
-    // Verify that the DoneIcon is shown after clicking
-    const doneIconButton = await screen.findByTestId('CopyContentDoneIconButton')
-    expect(doneIconButton).toBeInTheDocument()
-
-    // Wait for the state to reset and show CopyAllIcon again after 1 second
-    await waitFor(() => expect(screen.getByTestId('CopyContent')).toBeInTheDocument(), { timeout: 1100 })
-  })
-})
