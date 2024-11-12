@@ -1,3 +1,78 @@
+import { render, screen, fireEvent } from '@testing-library/react';
+import SimpleAccordion from './SimpleAccordion';
+import '@testing-library/jest-dom';
+import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
+const mockData = [
+  {
+    question: 'What is your name?',
+    answer: 'My name is John Doe.',
+  },
+  {
+    question: 'What is your favorite color?',
+    answer: 'My favorite color is blue.',
+  },
+];
+
+describe('SimpleAccordion Component', () => {
+  it('should render section header correctly', () => {
+    const sectionHeader = 'Frequently Asked Questions';
+    render(<SimpleAccordion sectionHeader={sectionHeader} questionAnswers={mockData} />);
+    
+    // Check if section header is rendered
+    expect(screen.getByText('Frequently Asked Questions')).toBeInTheDocument();
+  });
+
+  it('should render all questions and answers correctly', () => {
+    const sectionHeader = 'Frequently Asked Questions';
+    render(<SimpleAccordion sectionHeader={sectionHeader} questionAnswers={mockData} />);
+
+    // Check if each question and answer pair is rendered correctly
+    mockData.forEach(({ question, answer }) => {
+      expect(screen.getByText(question)).toBeInTheDocument();
+      expect(screen.getByText(answer)).toBeInTheDocument();
+    });
+  });
+
+  it('should expand and collapse accordion when clicked', () => {
+    const sectionHeader = 'Frequently Asked Questions';
+    render(<SimpleAccordion sectionHeader={sectionHeader} questionAnswers={mockData} />);
+
+    // Get the accordion summary element (section header)
+    const accordionSummary = screen.getByText('Frequently Asked Questions').closest('div');
+
+    // Initially, check if the AccordionDetails is not rendered (collapsed state)
+    expect(screen.queryByTestId('faqAccordian')).toBeNull();
+
+    // Simulate clicking the accordion summary to expand it
+    fireEvent.click(accordionSummary);
+
+    // Check if AccordionDetails with questions is now rendered (expanded state)
+    expect(screen.getAllByTestId('faqAccordian')).toHaveLength(mockData.length);
+
+    // Simulate clicking the accordion summary to collapse it
+    fireEvent.click(accordionSummary);
+
+    // Check if AccordionDetails is no longer rendered (collapsed state)
+    expect(screen.queryByTestId('faqAccordian')).toBeNull();
+  });
+
+  it('should render expand icon correctly', () => {
+    const sectionHeader = 'Frequently Asked Questions';
+    render(<SimpleAccordion sectionHeader={sectionHeader} questionAnswers={mockData} />);
+
+    // Check if the ExpandMoreIcon is rendered for each accordion summary
+    expect(screen.getAllByRole('button')).toHaveLength(mockData.length); // One button for each question
+    expect(screen.getAllByRole('button')[0].querySelector('svg')).toBeInTheDocument(); // Check for the icon
+  });
+});
+
+
+
+
+
+
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import FileTableView from './FileTableView'; // Path to your component
 import '@testing-library/jest-dom';
