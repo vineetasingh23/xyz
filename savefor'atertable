@@ -1,3 +1,81 @@
+import { render, screen, fireEvent } from '@testing-library/react'
+import DisplayCards from './DisplayCards'
+import '@testing-library/jest-dom'
+import { Box, Container, Grid, OutlinedInput, InputAdornment, IconButton, Typography } from '@mui/material'
+import SearchIcon from '@mui/icons-material/Search'
+
+// Mock ProcessorCard component
+jest.mock('./ProcessorCard', () => {
+  return ({ data }) => <div>{data.displayName}</div>
+})
+
+const sampleProcessors = [
+  { displayName: 'Processor 1', id: 1 },
+  { displayName: 'Processor 2', id: 2 },
+  { displayName: 'Processor 3', id: 3 },
+]
+
+describe('DisplayCards Component', () => {
+  it('renders loading text when cardData is empty', () => {
+    render(<DisplayCards cardData={[]} />)
+
+    // Check if the loading text is shown
+    expect(screen.getByText(/Loading Processors../i)).toBeInTheDocument()
+  })
+
+  it('displays ProcessorCard components when cardData is provided', () => {
+    render(<DisplayCards cardData={sampleProcessors} />)
+
+    // Check if the ProcessorCard components are rendered
+    expect(screen.getByText('Processor 1')).toBeInTheDocument()
+    expect(screen.getByText('Processor 2')).toBeInTheDocument()
+    expect(screen.getByText('Processor 3')).toBeInTheDocument()
+  })
+
+  it('filters cards based on search term', () => {
+    render(<DisplayCards cardData={sampleProcessors} />)
+
+    // Find the search input and simulate typing
+    const searchInput = screen.getByTestId('searchInput')
+    fireEvent.change(searchInput, { target: { value: 'Processor 1' } })
+
+    // Check that only the filtered card is displayed
+    expect(screen.getByText('Processor 1')).toBeInTheDocument()
+    expect(screen.queryByText('Processor 2')).not.toBeInTheDocument()
+    expect(screen.queryByText('Processor 3')).not.toBeInTheDocument()
+  })
+
+  it('displays all cards when search term is cleared', () => {
+    render(<DisplayCards cardData={sampleProcessors} />)
+
+    const searchInput = screen.getByTestId('searchInput')
+    fireEvent.change(searchInput, { target: { value: 'Processor 1' } })
+
+    // Clear the search term
+    fireEvent.change(searchInput, { target: { value: '' } })
+
+    // Check if all cards are displayed
+    expect(screen.getByText('Processor 1')).toBeInTheDocument()
+    expect(screen.getByText('Processor 2')).toBeInTheDocument()
+    expect(screen.getByText('Processor 3')).toBeInTheDocument()
+  })
+
+  it('shows no processors when no processor matches search', () => {
+    render(<DisplayCards cardData={sampleProcessors} />)
+
+    const searchInput = screen.getByTestId('searchInput')
+    fireEvent.change(searchInput, { target: { value: 'Nonexistent Processor' } })
+
+    // Check that no ProcessorCards are displayed
+    expect(screen.queryByText('Processor 1')).not.toBeInTheDocument()
+    expect(screen.queryByText('Processor 2')).not.toBeInTheDocument()
+    expect(screen.queryByText('Processor 3')).not.toBeInTheDocument()
+  })
+})
+
+
+
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import CopyButton from './CopyButton'
 import '@testing-library/jest-dom'
