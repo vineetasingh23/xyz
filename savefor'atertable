@@ -458,5 +458,51 @@ describe('MyDocSplitters Component Tests', () => {
     // For example, processor name and ID are cleared
     expect(screen.queryByDisplayValue('Processor A')).not.toBeInTheDocument();
   });
+
+
+
+
+
+
+
 });
 
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import CopyAllButton from './CopyAllButton'
+import '@testing-library/jest-dom'
+
+// Mocking the clipboard API
+Object.assign(navigator, {
+  clipboard: {
+    writeText: jest.fn(),
+  },
+})
+
+describe('CopyAllButton Component', () => {
+  it('renders CopyAllIcon initially', () => {
+    render(<CopyAllButton contentToCopy="Sample text" title="Copy this content" />)
+    
+    // Check that CopyAllIcon is rendered initially
+    const copyButton = screen.getByTestId('CopyContent')
+    expect(copyButton).toBeInTheDocument()
+  })
+
+  it('copies content to clipboard and shows DoneIcon', async () => {
+    render(<CopyAllButton contentToCopy="Sample text" title="Copy this content" />)
+    
+    const copyButton = screen.getByTestId('CopyContent')
+
+    // Simulate a click event to copy content
+    fireEvent.click(copyButton)
+
+    // Check that the clipboard writeText function was called with the correct content
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Sample text')
+
+    // Verify that the DoneIcon is shown after clicking
+    const doneIconButton = await screen.findByTestId('CopyContentDoneIconButton')
+    expect(doneIconButton).toBeInTheDocument()
+
+    // Wait for the state to reset and show CopyAllIcon again after 1 second
+    await waitFor(() => expect(screen.getByTestId('CopyContent')).toBeInTheDocument(), { timeout: 1100 })
+  })
+})
