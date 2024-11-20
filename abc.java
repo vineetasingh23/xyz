@@ -1,87 +1,60 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { SnackbarProvider } from 'notistack';
-import MockAdapter from 'axios-mock-adapter';
-import axios from 'axios';
-import SignatureCapture from '../../pages/SignatureCapture'; // Adjust path as needed
-import { APIEndPoints } from '../../common/APIEndPoints';
+import { useEffect, useRef } from "react";
 
-jest.mock('@react-pdf-viewer/core', () => ({
-  Worker: jest.fn(() => null),
-  Viewer: jest.fn(() => null),
-}));
-
-// Mock component wrapper
-const MockSignatureCapture = () => (
-  <SnackbarProvider maxSnack={5} autoHideDuration={3000} preventDuplicate>
-    <Router>
-      <SignatureCapture />
-    </Router>
-  </SnackbarProvider>
-);
-
-describe('Test Cases for SignatureCapture screen', () => {
-  let mock: MockAdapter;
-
-  beforeAll(() => {
-    sessionStorage.setItem('activeTenantId', '1234');
-    mock = new MockAdapter(axios);
-    mock.onPost(APIEndPoints.ROOT + APIEndPoints.EXTRACT_DOCUMENT_AS_STRING)
-      .reply(200, { data: { extractedStrings: 'string extracted' } });
+function YourComponent() {
+  const latestValuesRef = useRef({
+    to: [],
+    cc: [],
+    bcc: [],
+    subject: "",
+    classification: null,
+    editorHtml: "",
+    attaches: [],
+    requestId: null,
   });
 
-  afterAll(() => {
-    jest.clearAllMocks();
-    jest.clearAllTimers();
-  });
+  // Update the ref whenever values change
+  useEffect(() => {
+    latestValuesRef.current = {
+      to,
+      cc,
+      bcc,
+      subject,
+      classification,
+      editorHtml,
+      attaches,
+      requestId,
+    };
+  }, [to, cc, bcc, subject, classification, editorHtml, attaches, requestId]);
 
-  beforeEach(() => {
-    render(<MockSignatureCapture />);
-  });
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const {
+        to,
+        cc,
+        bcc,
+        subject,
+        classification,
+        editorHtml,
+        attaches,
+        requestId,
+      } = latestValuesRef.current;
 
-  // For Header
-  it('Checks for header', async () => {
-    expect(await screen.findByText('dbTextract')).toBeDefined();
-  });
+      if (!requestId) {
+        // Save draft for the first time
+        const id = await handleAutoSaveDraftFirstTime();
+        setRequestId(id);
+      } else {
+        // Save subsequent drafts
+        await handleAutoSaveDraft();
+      }
+    }, 10000); // Call every 10 seconds
 
-  // For Heading
-  it('Checks for heading', async () => {
-    expect(await screen.findByText('Signature Capture')).toBeDefined();
-  });
+    return () => clearInterval(interval); // Cleanup the interval on component unmount
+  }, []); // Run only once when the component mounts
 
-  // Test for componentDidMount
-  it('should set isUnregisteredUserDialog to true if activeTenantId is not in sessionStorage', () => {
-    sessionStorage.removeItem('activeTenantId'); // Simulate missing activeTenantId
-    render(<MockSignatureCapture />);
-    expect(screen.queryByTestId('unregistered-dialog')).toBeInTheDocument();
-  });
-
-  // Test for componentDidUpdate
-  it('should update isUnregisteredUserDialog to true when loggingLoader changes and activeTenantId is null', () => {
-    sessionStorage.removeItem('activeTenantId');
-    const { rerender } = render(<MockSignatureCapture />);
-    // Simulate changing loggingLoader from true to false
-    rerender(<MockSignatureCapture />);
-    expect(screen.queryByTestId('unregistered-dialog')).toBeInTheDocument();
-  });
-
-  // Test for setTabValue
-  it('should update tabValue state in setTabValue', () => {
-    const component = render(<MockSignatureCapture />);
-    component.rerender(<MockSignatureCapture />);
-
-    // Directly call setTabValue and verify tabValue is updated
-    component.baseElement.__reactInstance.state.setTabValue('2');
-    expect(component.baseElement.__reactInstance.state.tabValue).toEqual('2');
-  });
-
-  // Test for handleChange
-  it('should update tabValue when a tab is clicked using handleChange', () => {
-    const newTab = screen.getByText('SignatureOutput'); // Replace with actual tab text
-    fireEvent.click(newTab);
-
-    // Verify that the tabValue has been updated by checking the displayed content
-    expect(screen.getByText('SignatureOutput')).toBeInTheDocument();
-  });
-});
+  return (
+    <div>
+      {/* Your component JSX */}
+    </div>
+  );
+}
