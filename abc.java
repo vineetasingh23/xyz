@@ -1,23 +1,55 @@
-import React from "react";
-import { Checkbox } from "@mui/material";
-import { styled, alpha } from "@mui/material/styles";
-import { darkTheme, lightTheme } from "../Constants/theme";
+import React, { useState, useEffect } from "react";
 
-export const CustomCheckbox = styled(Checkbox)(({ theme }) => ({
-  color: theme.palette.mode === "light" ? lightTheme.darkBlue : darkTheme.darkBlue,
-  "&.Mui-checked": {
-    color: theme.palette.mode === "light" ? lightTheme.darkBlue : darkTheme.darkBlue,
-  },
-  "&:hover": {
-    backgroundColor: alpha(
-      theme.palette.mode === "light" ? lightTheme.iconBlue : darkTheme.iconBlue,
-      theme.palette.action.hoverOpacity
-    ),
-  },
-  "&.Mui-disabled": {
-    color: theme.palette.mode === "light" ? theme.palette.grey[400] : theme.palette.grey[600],
-  },
-  "&.Mui-disabled + .MuiCheckbox-track": {
-    opacity: theme.palette.mode === "light" ? 0.6 : 0.3,
-  },
-}));
+const EmailAttachmentHandler = ({ reqId, mailData }) => {
+  const [includeAttachments, setIncludeAttachments] = useState(false);
+  const [updatedEmailData, setUpdatedEmailData] = useState({ ...mailData });
+
+  useEffect(() => {
+    // Sync the updated email data to sessionStorage whenever it changes
+    sessionStorage.setItem(
+      `ModifiedEmailDetails/${reqId}`,
+      JSON.stringify(updatedEmailData)
+    );
+  }, [updatedEmailData, reqId]);
+
+  const handleCheckboxChange = (event) => {
+    const checked = event.target.checked;
+    setIncludeAttachments(checked);
+
+    // Clone the current email data and update attachments/subject
+    const newEmailData = { ...mailData };
+    if (checked) {
+      newEmailData.attachments = mailData.attachments || [];
+      newEmailData.subject = "Attachments included"; // Example subject
+    } else {
+      newEmailData.attachments = []; // Exclude attachments
+      newEmailData.subject = "Attachments excluded"; // Example subject
+    }
+
+    setUpdatedEmailData(newEmailData); // Update state to trigger re-render
+  };
+
+  return (
+    <div>
+      <label>
+        <input
+          type="checkbox"
+          checked={includeAttachments}
+          onChange={handleCheckboxChange}
+        />
+        Include Attachments
+      </label>
+      <div>
+        <strong>Subject:</strong> {updatedEmailData.subject}
+      </div>
+      <div>
+        <strong>Attachments:</strong>{" "}
+        {updatedEmailData.attachments?.length > 0
+          ? updatedEmailData.attachments.join(", ")
+          : "None"}
+      </div>
+    </div>
+  );
+};
+
+export default EmailAttachmentHandler;
